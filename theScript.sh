@@ -4,7 +4,7 @@
 # Date Created: 04/27/19
 # Author: Marco Tijbout
 #
-# Version 0.9i
+# Version 0.9j
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -66,7 +66,7 @@
 ################################################################################
 
 ## Version of theScript.sh
-SCRIPT_VERSION="0.9i"
+SCRIPT_VERSION="0.9j"
 
 ## The user that executed the script.
 USERID=$(logname)
