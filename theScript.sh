@@ -4,7 +4,7 @@
 # Date Created: 04/27/19
 # Author: Marco Tijbout
 #
-# Version 0.9i
+# Version 0.9j
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -66,7 +66,7 @@
 ################################################################################
 
 ## Version of theScript.sh
-SCRIPT_VERSION="0.9i"
+SCRIPT_VERSION="0.9j"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -289,7 +289,6 @@ sub_menu3() {
         "PULSE_AGENT" "Install VMware Pulse Center Agent " ON \
         "ENROLL_GATEWAY" "Enroll Gateway to Pulse " OFF \
         "ENROLL_THING" "Enroll Thing onto Gateway " OFF \
-        "AGENT_INTERVAL" "Change Pulse Agent update interval " OFF \
         "PACKAGE_CLI" "Download the Pulse package cli " OFF \
         "THING_UNENROLL" "Unenroll Thing from Gateway " OFF \
         "GATEWAY_UNENROLL" "Unenroll Gateway from Pulse " OFF \
@@ -954,35 +953,6 @@ if [[ $MYMENU == *"PULSE_AGENT"* ]]; then
 
     printl "  - Pulse Agent: Nothing more to do. Exiting this part."
     printl ""
-fi
-
-################################################################################
-# Configure the Pull interal of the Pulse Agent.
-################################################################################
-if [[ $MYMENU == *"AGENT_INTERVAL"* ]]; then
-    printstatus "Changing Pulse Agent update interval..."
-    AGTINTERVAL=300
-    AGTINTERVAL=$(whiptail --inputbox "\nProvide new update interval (in sec.) (default=300)):\n" --title "Pulse Agent" 8 60 $AGTINTERVAL 3>&1 1>&2 2>&3)
-    NEWAGTINTERVAL="commandFetchIntervalSeconds = $AGTINTERVAL"
-
-    #Replace the current line with the new one in the pulse config file.
-    sed -i "/commandFetchIntervalSeconds/c$NEWAGTINTERVAL" "/opt/vmware/iotc-agent/conf/iotc-agent.cfg"
-    if [ $? -eq 0 ]; then
-        printl "The new value for pulling of the Pulse Agent is: $AGTINTERVAL seconds."
-    else 
-        printl "Value is not modified."
-    fi
-
-    #Restart the iotc-agent service.
-    systemctl restart iotc-agent
-    if [ $? -eq 0 ]; then
-        printl "The service iotc-agent is succesfully restarted."
-    else 
-        printl "The service iotc-agent did not succesfully restart."
-    fi
-    ## Cleanup variables
-    AGTINTERVAL=""
-    NEWAGTINTERVAL=""
 fi
 
 ################################################################################
