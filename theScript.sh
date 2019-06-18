@@ -400,7 +400,11 @@ fi
 ################################################################################
 # Creating a system administrator account. 
 ################################################################################
-if [[ $MYMENU == *"CREATE_SYSADMIN"* ]]; then
+
+## Module Functions
+
+## Module Logic
+moduleCreateSysadmin() {
     printstatus "Creating alternative administrative account..."
 
     ADMINNAME=sysadmin
@@ -465,13 +469,20 @@ if [[ $MYMENU == *"CREATE_SYSADMIN"* ]]; then
     NEW_GROUPS=""
     gr=""
     fi
+}
+
+if [[ $MYMENU == *"CREATE_SYSADMIN"* ]]; then
+    moduleCreateSysadmin
 fi
 
 ################################################################################
 # Updating the Host.
 ################################################################################
-if [[ $MYMENU == *"UPDATE_HOST"* ]]; then
-    ## Perform all the updates available.
+
+## Module Functions
+
+## Module Logic
+moduleUpdateHost() {
     printstatus "Update the Host with the latest available updates..."
 
     if [[ $ == *"CENTOS"* ]]; then
@@ -488,12 +499,20 @@ if [[ $MYMENU == *"UPDATE_HOST"* ]]; then
     fi
     ## Have the script reboot at the end.
     REBOOTREQUIRED=1
+}
+
+if [[ $MYMENU == *"UPDATE_HOST"* ]]; then
+    moduleUpdateHost
 fi
 
 ################################################################################
 # Regenerate the Host SSH keys.
 ################################################################################
-if [[ $MYMENU == *"REGENERATE_SSH_KEYS"* ]]; then
+
+## Module Functions
+
+## Module Logic
+moduleRegenerateSshKeys() {
     printstatus "Regenerate SSH Host keys..."
 
     ## Get the current public SSH key of the host.
@@ -517,12 +536,20 @@ if [[ $MYMENU == *"REGENERATE_SSH_KEYS"* ]]; then
 
     ## Have the script reboot at the end.
     REBOOTREQUIRED=1
+}
+
+if [[ $MYMENU == *"REGENERATE_SSH_KEYS"* ]]; then
+    moduleRegenerateSshKeys
 fi
 
 ################################################################################
 # Show the IP address of the Host at the login screen.
 ################################################################################
-if [[ $MYMENU == *"SHOW_IP"* ]]; then
+
+## Module Functions
+
+## Module Logic
+moduleShowIp() {
     printstatus "Show the IP address at the logon screen..."
 
     TARGETFILE=/etc/issue
@@ -548,12 +575,19 @@ if [[ $MYMENU == *"SHOW_IP"* ]]; then
         ## Cleanup variables
         TARGETFILE=""
     fi
+}
+if [[ $MYMENU == *"SHOW_IP"* ]]; then
+    moduleShowIp
 fi
 
 ################################################################################
 # Rename the Host.
 ################################################################################
-if [[ $MYMENU == *"HOST_RENAME"* ]]; then
+
+## Module Functions
+
+## Module Logic
+moduleHostRename() {
     printstatus "Rename the Host..."
 
     ## Format the date and time strings 
@@ -604,12 +638,20 @@ if [[ $MYMENU == *"HOST_RENAME"* ]]; then
     GENHOSTNAME=""
     NEWHOSTNAME=""
     cloudFile=""
+}
+
+if [[ $MYMENU == *"HOST_RENAME"* ]]; then
+    moduleHostRename
 fi
 
 ################################################################################
 # Apply a more convenient Prompt for the user.
 ################################################################################
-if [[ $MYMENU == *"CUSTOM_PROMPT"* ]]; then
+
+## Module Functions
+
+## Module Logic
+moduleCustomPrompt () {
     printstatus "Change the prompt to a more user friendly one..."
 
     TARGETFILE="$WORKDIR/.bashrc"
@@ -628,12 +670,20 @@ if [[ $MYMENU == *"CUSTOM_PROMPT"* ]]; then
     ## Cleanup variables
     TARGETFILE=""
     NEWPROMPT=""
+}
+
+if [[ $MYMENU == *"CUSTOM_PROMPT"* ]]; then
+    moduleCustomPrompt
 fi
 
 ################################################################################
 # Add additional aliases to the profile of the user.
 ################################################################################
-if [[ $MYMENU == *"CUSTOM_ALIAS"* ]]; then
+
+## Module Functions
+
+## Module Logic
+moduleCustomAlias() {
     printstatus "Add some aliases for ease of use..."
 
     TARGETFILE="$WORKDIR/.bash_aliases"
@@ -688,12 +738,20 @@ EOF
     ## Cleanup variables
     TARGETFILE=""
     WORKFILE2=""
+}
+
+if [[ $MYMENU == *"CUSTOM_ALIAS"* ]]; then
+
 fi
 
 ################################################################################
 # Remove the need to type a password when using sudo.
 ################################################################################
-if [[ $MYMENU == *"NO_PASS_SUDO"* ]]; then
+
+## Module Functions
+
+## Module Logic
+moduleNoPassSudo() {
     printstatus "Remove for need of password performing sudo..."
 
     if ls /etc/sudoers.d/*$USERID*; then
@@ -703,6 +761,10 @@ if [[ $MYMENU == *"NO_PASS_SUDO"* ]]; then
         echo "$USERID ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/010_$USERID-nopasswd
         chmod 0440 /etc/sudoers.d/010_$USERID-nopasswd          
     fi
+}
+
+if [[ $MYMENU == *"NO_PASS_SUDO"* ]]; then
+    moduleNoPassSudo
 fi
 
 ################################################################################
@@ -967,7 +1029,7 @@ fi
 
 ## Module Logic
 
-moduleEnroll_Gateway() {
+moduleEnrollGateway() {
     printstatus "Enrolling the Gateway to Pulse..."
     if [ ! -f /opt/vmware/iotc-agent/bin/DefaultClient ]; then 
         printf "${BIRed}Pulse agent is not installed - aborting${BIWhite}\r\n"; exit
@@ -1015,13 +1077,18 @@ moduleEnroll_Gateway() {
 }
 
 if [[ $MYMENU == *"ENROLL_GATEWAY"* ]]; then
-    moduleEnroll_Gateway
+    moduleEnrollGateway
 fi
 
 ################################################################################
 # Enroll a Thing Device onto the Gateway Device.
 ################################################################################
-if [[ $MYMENU == *"ENROLL_THING"* ]]; then
+
+## Module Functions
+
+## Module Logic
+
+moduleEnrollThing() {
     printstatus "Enrolling a THING onto the Gateway..."
 
     ## Check if agent is installed.
@@ -1057,12 +1124,20 @@ if [[ $MYMENU == *"ENROLL_THING"* ]]; then
     TTMPLNAME=""
     TNGNAME=""
     TNGDEVICEID=""
+}
+
+if [[ $MYMENU == *"ENROLL_THING"* ]]; then
+    moduleEnrollThing
 fi
 
 ################################################################################
 # Unenroll a Thing Device from the Gateway Device.
 ################################################################################
-if [[ $MYMENU == *"THING_UNENROLL"* ]]; then
+
+## Module Functions
+
+## Module Logic
+moduleThingUnenroll() {
     printstatus "Unenrolling a THING from the Gateway..."
 
     ## Check if agent is installed.
@@ -1088,12 +1163,20 @@ if [[ $MYMENU == *"THING_UNENROLL"* ]]; then
 
     ## Cleanup variables
     TNGDEVICEID=""
+}
+
+if [[ $MYMENU == *"THING_UNENROLL"* ]]; then
+    moduleThingUnenroll
 fi
 
 ################################################################################
 # Unenroll a Gateway Device from Pulse.
 ################################################################################
-if [[ $MYMENU == *"GATEWAY_UNENROLL"* ]]; then
+
+## Module Functions
+
+## Module Logic
+moduleGatewayUnenroll() {
     printstatus "Unenrolling a GATEWAY from Pulse..."
 
     ## Check if agent is installed.
@@ -1119,12 +1202,20 @@ if [[ $MYMENU == *"GATEWAY_UNENROLL"* ]]; then
 
     ## Cleanup variables
     GWDEVICEID=""
+}
+
+if [[ $MYMENU == *"GATEWAY_UNENROLL"* ]]; then
+    moduleGatewayUnenroll
 fi
 
 ################################################################################
 # Uninstall the agent from the Gateway Device.
 ################################################################################
-if [[ $MYMENU == *"AGENT_UNINSTALL"* ]]; then
+
+## Module Functions
+
+## Module Logic
+moduleAgentUninstall() {
     printstatus "Uninstalling the Pulse Agent from the gateway..."
     /opt/vmware/iotc-agent/uninstall.sh
     if [ $? -eq 0 ]; then
@@ -1132,12 +1223,21 @@ if [[ $MYMENU == *"AGENT_UNINSTALL"* ]]; then
     else 
         printl "Pulse Agent is NOT uninstalled sucessfully."
     fi
+}
+
+if [[ $MYMENU == *"AGENT_UNINSTALL"* ]]; then
+    moduleAgentUninstall
 fi
 
 ################################################################################
 # Download the Pulse package-cli onto the host.
 ################################################################################
-if [[ $MYMENU == *"PACKAGE_CLI"* ]]; then
+
+## Module Functions
+
+## Module Logic
+modulePackageCli() {
+
     if [[ $CPUARCH == *"armv7l"* ]];then
         whiptail --title "Sorry, not available" --msgbox "Sorry, there is no package-cli for the $CPUARCH architecture available. You must hit OK to continue." 8 78
         printstatus "Sorry, there is no package-cli for the $CPUARCH architecture available"
@@ -1179,151 +1279,152 @@ if [[ $MYMENU == *"PACKAGE_CLI"* ]]; then
     PULSEHOST=""
     CLIPACKAGE=""
     PULSECLIURL=""
+}
+
+if [[ $MYMENU == *"PACKAGE_CLI"* ]]; then
+    modulePackageCli
 fi
 
 ################################################################################
 # Install Log2RAM to extend the life SD cards.
 ################################################################################
-if [[ $MYMENU == *"log2ram"* ]]; then
+
+## Module Functions
+Log2RAMAlreadyInstalled() {
+    printl "    - $MODULE_NAME: Check if already installed."
+    ## Check if the Log2RAM is already installed.
+    if [ ! -f /etc/log2ram.conf ]; then
+        printl "    - $MODULE_NAME: Not installed."
+        Log2RAM_INSTALLED="false"
+    else
+        printl "    - $MODULE_NAME: Is installed."
+        Log2RAM_INSTALLED="true" 
+    fi
+}
+
+Log2RAMOSCheck() {
+    ## Check if the required OS is Raspbian.
+    printl "  - $MODULE_NAME: Check OS is Raspbian."
+    if [[ $OPSYS == *"RASPBIAN"* ]]; then
+        printl "    - $MODULE_NAME: OS is $OPSYS."
+        Log2RAM_OS_CHECK="true"
+    else
+        printl "    - $MODULE_NAME: Incorrect OS: $OPSYS."
+        Log2RAM_OS_CHECK="false" 
+    fi
+}
+
+Log2RAMgitPreReqs() {
+    ## Check if the required OS is Raspbian.
+    printl "  - $MODULE_NAME: Check if git is already installed."
+    which git
+    if [ $? -eq 0 ]; then
+        printl "    - $MODULE_NAME: git is installed."
+        GIT_INSTALLED="true"
+    else
+        printl "    - $MODULE_NAME: git is not installed. Install."
+        GIT_INSTALLED="false"
+        $PCKMGR $AQUIET -y install git 2>&1 | tee -a $LOGFILE
+        ## Check and log success.
+        if [ $? -eq 0 ]; then
+            printl "    - $MODULE_NAME: git installed sucessfully."
+            GIT_INSTALL_SUCCES="true"
+        else 
+            printl "    - $MODULE_NAME: git did not install sucessfully."
+            GIT_INSTALL_SUCCES="false"
+            return ## Exit function on failure.
+        fi
+    fi
+}
+
+Log2RAMDownloadInstall() {
+    ## Download and Install Log2RAM.
+    printl "    - $MODULE_NAME: Download binaries."
+    
+    ## Download Log2RAM
+    cd $WORKDIR
+    git clone https://github.com/azlux/log2ram.git 2>&1 | tee -a $LOGFILE
+    if [ $? -eq 0 ]; then
+        printl "    - $MODULE_NAME: git clone sucessful."
+        APP_DOWNLOAD_SUCCES="true"
+    else 
+        printl "    - $MODULE_NAME: git clone not sucessful."
+        APP_DOWNLOAD_SUCCES="false"
+        return ## Exit function on failure.
+    fi
+
+    ## Install Log2RAM
+    cd log2ram
+    chmod +x install.sh
+    ./install.sh 2>&1 | tee -a $LOGFILE
+    if [ $? -eq 0 ]; then
+        printl "    - $MODULE_NAME: Installation sucessful."
+        APP_INSTALL_SUCCES="true"
+    else 
+        printl "    - $MODULE_NAME: Installation not sucessful."
+        APP_INSTALL_SUCCES="false"
+        return ## Exit function on failure.
+    fi
+    cd $WORKDIR
+}
+
+Log2RAMChangeCapacity() {
+    ## Increase Log2RAM capacity
+    printl "    - $MODULE_NAME: Change capacity."
+    
+    ## Ask the user for input.
+    L2RDEFVAL_I=40M
+    printl "    - $MODULE_NAME: Default capacity is: $L2RDEFVAL_I"
+    L2RDEFVAL_O=$(whiptail --inputbox "\nProvide new capacity (for example 192M)):\n" --title "Log2RAM Capacity" 8 60 $L2RDEFVAL_I 3>&1 1>&2 2>&3)
+    printl "    - $MODULE_NAME: Custom capacity is: $L2RDEFVAL_O"
+
+    ## Check for SIZE value in the config file and make the modifications.
+    if grep -Fq "SIZE" /etc/log2ram.conf; then
+        # Replace the line with the new value.
+        sed -i "/SIZE/c\SIZE=$L2RDEFVAL_O" /etc/log2ram.conf
+        ## Check and log success.
+        if [ $? -eq 0 ]; then
+            printl "    - $MODULE_NAME: Capacity succesfully changed."
+            CONF_CHANGE_SUCCES="true"
+        else 
+            printl "    - $MODULE_NAME: Capacity is not changed sucessfully."
+            CONF_CHANGE_SUCCES="false"
+            return ## Exit function on ERROR.
+        fi
+        ## Have the script reboot at the end.
+        REBOOTREQUIRED=1
+    else
+        printl "    - $MODULE_NAME: ERROR - Size value not found in conf file."
+    fi
+}
+
+################################################################################
+## Module Logic
+
+moduleLog2RAM() {
     printstatus "Installing Log2RAM"
     MODULE_NAME=Log2RAM
-
-    ## Module Functions
-    Log2RAMAlreadyInstalled() {
-        printl "    - $MODULE_NAME: Check if already installed."
-        ## Check if the Log2RAM is already installed.
-        if [ ! -f /etc/log2ram.conf ]; then
-            printl "    - $MODULE_NAME: Not installed."
-            Log2RAM_INSTALLED="false"
+    Log2RAMOSCheck ## Check if the required OS is Raspbian.
+    if [[ $Log2RAM_OS_CHECK == "true" ]]; then
+        ## Correct OS to install on.
+        Log2RAMAlreadyInstalled ## Check if the Log2RAM is already installed.
+        if [[ $Log2RAM_INSTALLED == "true" ]]; then
+            ## Log2RAM is already installed.
+            printl "    - $MODULE_NAME: Already installed. Initiate config change"
+            Log2RAMChangeCapacity ## Change Log2RAM capacity.
         else
-            printl "    - $MODULE_NAME: Is installed."
-            Log2RAM_INSTALLED="true" 
-        fi
-    }
-
-    Log2RAMOSCheck() {
-        ## Check if the required OS is Raspbian.
-        printl "  - $MODULE_NAME: Check OS is Raspbian."
-        if [[ $OPSYS == *"RASPBIAN"* ]]; then
-            printl "    - $MODULE_NAME: OS is $OPSYS."
-            Log2RAM_OS_CHECK="true"
-        else
-            printl "    - $MODULE_NAME: Incorrect OS: $OPSYS."
-            Log2RAM_OS_CHECK="false" 
-        fi
-    }
-
-    Log2RAMgitPreReqs() {
-        ## Check if the required OS is Raspbian.
-        printl "  - $MODULE_NAME: Check if git is already installed."
-        which git
-        if [ $? -eq 0 ]; then
-            printl "    - $MODULE_NAME: git is installed."
-            GIT_INSTALLED="true"
-        else
-            printl "    - $MODULE_NAME: git is not installed. Install."
-            GIT_INSTALLED="false"
-            $PCKMGR $AQUIET -y install git 2>&1 | tee -a $LOGFILE
-            ## Check and log success.
-            if [ $? -eq 0 ]; then
-                printl "    - $MODULE_NAME: git installed sucessfully."
-                GIT_INSTALL_SUCCES="true"
-            else 
-                printl "    - $MODULE_NAME: git did not install sucessfully."
-                GIT_INSTALL_SUCCES="false"
-                return ## Exit function on failure.
-            fi
-        fi
-    }
-
-    Log2RAMDownloadInstall() {
-        ## Download and Install Log2RAM.
-        printl "    - $MODULE_NAME: Download binaries."
-        
-        ## Download Log2RAM
-        cd $WORKDIR
-        git clone https://github.com/azlux/log2ram.git 2>&1 | tee -a $LOGFILE
-        if [ $? -eq 0 ]; then
-            printl "    - $MODULE_NAME: git clone sucessful."
-            APP_DOWNLOAD_SUCCES="true"
-        else 
-            printl "    - $MODULE_NAME: git clone not sucessful."
-            APP_DOWNLOAD_SUCCES="false"
-            return ## Exit function on failure.
-        fi
-
-        ## Install Log2RAM
-        cd log2ram
-        chmod +x install.sh
-        ./install.sh 2>&1 | tee -a $LOGFILE
-        if [ $? -eq 0 ]; then
-            printl "    - $MODULE_NAME: Installation sucessful."
-            APP_INSTALL_SUCCES="true"
-        else 
-            printl "    - $MODULE_NAME: Installation not sucessful."
-            APP_INSTALL_SUCCES="false"
-            return ## Exit function on failure.
-        fi
-        cd $WORKDIR
-    }
-
-    Log2RAMChangeCapacity() {
-        ## Increase Log2RAM capacity
-        printl "    - $MODULE_NAME: Change capacity."
-        
-        ## Ask the user for input.
-        L2RDEFVAL_I=40M
-        printl "    - $MODULE_NAME: Default capacity is: $L2RDEFVAL_I"
-        L2RDEFVAL_O=$(whiptail --inputbox "\nProvide new capacity (for example 192M)):\n" --title "Log2RAM Capacity" 8 60 $L2RDEFVAL_I 3>&1 1>&2 2>&3)
-        printl "    - $MODULE_NAME: Custom capacity is: $L2RDEFVAL_O"
-
-        ## Check for SIZE value in the config file and make the modifications.
-        if grep -Fq "SIZE" /etc/log2ram.conf; then
-            # Replace the line with the new value.
-            sed -i "/SIZE/c\SIZE=$L2RDEFVAL_O" /etc/log2ram.conf
-            ## Check and log success.
-            if [ $? -eq 0 ]; then
-                printl "    - $MODULE_NAME: Capacity succesfully changed."
-                CONF_CHANGE_SUCCES="true"
-            else 
-                printl "    - $MODULE_NAME: Capacity is not changed sucessfully."
-                CONF_CHANGE_SUCCES="false"
-                return ## Exit function on ERROR.
-            fi
-            ## Have the script reboot at the end.
-            REBOOTREQUIRED=1
-        else
-            printl "    - $MODULE_NAME: ERROR - Size value not found in conf file."
-        fi
-    }
-
-    ############################################################################
-    ## Module Logic
-
-    moduleLog2RAM() {
-        Log2RAMOSCheck ## Check if the required OS is Raspbian.
-        if [[ $Log2RAM_OS_CHECK == "true" ]]; then
-            ## Correct OS to install on.
-            Log2RAMAlreadyInstalled ## Check if the Log2RAM is already installed.
-            if [[ $Log2RAM_INSTALLED == "true" ]]; then
-                ## Log2RAM is already installed.
+            ## Log2RAM is not installed. Install.
+            Log2RAMgitPreReqs ## Check if git is installed.
+            Log2RAMDownloadInstall ## Download and Install Log2RAM.
+            if [[ $APP_INSTALL_SUCCES == "true" ]]; then
                 printl "    - $MODULE_NAME: Already installed. Initiate config change"
                 Log2RAMChangeCapacity ## Change Log2RAM capacity.
-            else
-                ## Log2RAM is not installed. Install.
-                Log2RAMgitPreReqs ## Check if git is installed.
-                Log2RAMDownloadInstall ## Download and Install Log2RAM.
-                if [[ $APP_INSTALL_SUCCES == "true" ]]; then
-                    printl "    - $MODULE_NAME: Already installed. Initiate config change"
-                    Log2RAMChangeCapacity ## Change Log2RAM capacity.
-                fi
             fi
-        else
-            printl "    - $MODULE_NAME: ERROR - Incorrect OS. Exit here."
-                return ## Exit function on ERROR.
         fi
-    }
-    moduleLog2RAM
+    else
+        printl "    - $MODULE_NAME: ERROR - Incorrect OS. Exit here."
+            return ## Exit function on ERROR.
+    fi
 
     ## Cleanup variables
     L2RDEFVAL=""
@@ -1331,6 +1432,10 @@ if [[ $MYMENU == *"log2ram"* ]]; then
     Log2RAM_INSTALLED=""
     Log2RAM_OS_CHECK=""
     GIT_INSTALL_SUCCES=""
+}
+
+if [[ $MYMENU == *"log2ram"* ]]; then
+    moduleLog2RAM
 fi
 
 ################################################################################
