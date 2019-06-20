@@ -22,12 +22,13 @@
 # Enhancement ideas:
 #   -Making all the action in to functions so the order can easyly be adjusted.
 #   -AlreadyRun: Log what actions are already run. Ask double check.
+#   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
 # 1.0  Marco Tijbout:
 #   Publishing of script to public.
 # 0.9k Marco Tijbout:
-#   Fixing issues with onboarding a device with agent version 667.
+#   Making everything modular with functions.
 # 0.9i Marco Tijbout:
 #   First adaptions required for Photon OS.
 # 0.9h Marco Tijbout:
