@@ -71,7 +71,7 @@
 ################################################################################
 
 ## Version of theScript.sh
-SCRIPT_VERSION="0.9j"
+SCRIPT_VERSION="0.9k"
 
 ## The user that executed the script.
 USERID=$(logname)
