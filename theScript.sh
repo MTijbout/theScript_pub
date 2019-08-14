@@ -2,9 +2,10 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 04/27/19
+# Date last update: 08/14/19
 # Author: Marco Tijbout
 #
-# Version 0.9
+# Version 0.9k
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -16,7 +17,7 @@
 # Description: Script to show menu to select what modifications need to be
 #              made to the OS.
 #
-# Usage: Run with SUDO. 
+# Usage: Run with SUDO.
 #        The script requires internet connectivity.
 #
 # Enhancement ideas:
@@ -29,6 +30,7 @@
 #   Publishing of script to public.
 # 0.9k Marco Tijbout:
 #   Making everything modular with functions.
+#   MACDHCP: New module to configure MAC address usage for DHCP requests.
 # 0.9i Marco Tijbout:
 #   First adaptions required for Photon OS.
 # 0.9h Marco Tijbout:
@@ -48,9 +50,9 @@
 #   Added GATEWAY_UNENROLL: Unenrolling a Gateway Device.
 #   Added comments to the sub actions for readability.
 #   Added CENTOS check and adaptions for package manager.
-# 0.9c Marco Tijbout: 
+# 0.9c Marco Tijbout:
 #   SHOW_IP: Issues, but found an easier way. Just show all IPv4 addresses.
-# 0.9b Marco Tijbout: 
+# 0.9b Marco Tijbout:
 #   PULSE_AGENT: Revamped Pulse Agent downloading.
 #   CUSTOM_ALIAS: Aliases for ease of use of command line.
 #   SHOW_IP: Build check for OS differences in NIC names.
@@ -73,7 +75,7 @@ SCRIPT_VERSION="0.9j"
 
 ## The user that executed the script.
 USERID=$(logname)
-# if [ "$EUID" == 0 ]; then 
+# if [ "$EUID" == 0 ]; then
 #     WORKDIR=/$USERID
 # else
 #     WORKDIR=/home/$USERID
@@ -93,8 +95,8 @@ printl() {
 # FILE_NAME='echo "$FILE"'
 # printl "File name is: $FILE
 
-## BEGIN CHECK SCRIPT RUNNING UNDER SUDO 
-if [ "$EUID" -ne 0 ]; then 
+## BEGIN CHECK SCRIPT RUNNING UNDER SUDO
+if [ "$EUID" -ne 0 ]; then
     printl ""
     printl "Please run this script using sudo."
     printl ""
@@ -123,7 +125,7 @@ if [[ $OPSYS == *"CENTOS"* ]]; then
     AQUIET="--quiet"
     NQUIET=""
 else
-    PCKMGR="apt-get" 
+    PCKMGR="apt-get"
     printl "For use with $OPSYS the package manager is set to $PCKMGR"
     AQUIET="-qq"
     NQUIET="-s"
@@ -248,9 +250,9 @@ main_menu1() {
     MMENU1=$(whiptail --title "Main Menu Selection" --checklist --notags \
         "\nSelect items as required then hit OK " 25 75 16 \
         "QUIET" "Quiet(er) install - untick for lots of info " OFF \
-        "CUST_OPS" "Menu - Customization options " OFF \
+        "CUST_OPS" "Menu - Customization options " ON \
         "SEC_OPS" "Menu - Options for securing the system " OFF \
-        "PULSE_OPS" "Menu - VMware Pulse Options " ON \
+        "PULSE_OPS" "Menu - VMware Pulse Options " OFF \
         "log2ram" "Install Log2RAM with custom capacity " OFF \
         3>&1 1>&2 2>&3)
 printl "Output MainMenu1: $MMENU1"
@@ -265,6 +267,7 @@ sub_menu1() {
     SMENU1=$(whiptail --checklist --notags --title "Select customization options" \
         "\nSelect items as required then hit OK " 25 75 16 \
         "SHOW_IP" "Show IP on logon screen " OFF \
+        "MACDHCP" "Configure to use MAC for DHCP " ON \
         "CUSTOM_PROMPT" "Updated Prompt " OFF \
         "CUSTOM_ALIAS" "Aliases for ease of use " OFF \
         "CHANGE_LANG" "Change Language to US-English " OFF \
@@ -289,7 +292,7 @@ MYMENU="$MYMENU $SMENU2"
 sub_menu3() {
     SMENU3=$(whiptail --checklist --notags --title "Select Pulse options" \
         "\nSelect items as required then hit OK " 25 75 16 \
-        "PULSE_AGENT" "Install VMware Pulse Center Agent " ON \
+        "PULSE_AGENT" "Install VMware Pulse Center Agent " OFF \
         "ENROLL_GATEWAY" "Enroll Gateway to Pulse " OFF \
         "ENROLL_THING" "Enroll Thing onto Gateway " OFF \
         "PACKAGE_CLI" "Download the Pulse package cli " OFF \
@@ -399,7 +402,7 @@ EOF
 fi
 
 ################################################################################
-# Creating a system administrator account. 
+# Creating a system administrator account.
 ################################################################################
 
 ## Module Functions
@@ -604,7 +607,7 @@ moduleHostRename() {
     GENHOSTNAME=$OPSYS$RDM${MAC^^}
 
     NEWHOSTNAME=$(whiptail --title "Rename Host" --inputbox "\nEnter the new name for the Host:\n" 8 60 $GENHOSTNAME 3>&1 1>&2 2>&3)
-    
+
     printl "The old hostname: $OLDHOSTNAME"
     printl "The generated hostname: $GENHOSTNAME"
     printl "The chosen hostname: $NEWHOSTNAME"
@@ -742,7 +745,7 @@ EOF
 }
 
 if [[ $MYMENU == *"CUSTOM_ALIAS"* ]]; then
-
+    moduleCustomAlias
 fi
 
 ################################################################################
@@ -757,10 +760,10 @@ moduleNoPassSudo() {
 
     if ls /etc/sudoers.d/*$USERID*; then
         printl "Using password for sudo is not required for this user."
-    else 
+    else
         printl "Removed for need of password performing sudo for this user."
         echo "$USERID ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/010_$USERID-nopasswd
-        chmod 0440 /etc/sudoers.d/010_$USERID-nopasswd          
+        chmod 0440 /etc/sudoers.d/010_$USERID-nopasswd
     fi
 }
 
@@ -782,7 +785,7 @@ pulseAgentAlreadyInstalled() {
         PLSAGTINSTALLED="false"
     else
         printl "    - Pulse Agent: Is installed."
-        PLSAGTINSTALLED="true" 
+        PLSAGTINSTALLED="true"
     fi
 }
 
@@ -843,8 +846,8 @@ getPulseAgentLatestVersionInfo() {
     printl ""
     curl -o $PLSAGTDLFLD/manifest.json $PULSE_MANIFEST 2>&1 | tee -a $LOGFILE
     if [ $? -eq 0 ]; then
-        printl "    - Pulse Agent: Manifest download successful."  
-    else 
+        printl "    - Pulse Agent: Manifest download successful."
+    else
         printl "    - Pulse Agent: Manifest download NOT successful."
     fi
     PLSAGTVERSION=$(awk -F'"' '{print $8}' $PLSAGTDLFLD/manifest.json)
@@ -887,8 +890,8 @@ subDownloadPulseAgent() {
         ## Unpacking the agent.
         printl "  - Unpack $PLSAGTDLFLD/$1"
         tar -xzf $PLSAGTDLFLD/$1 -C $PLSAGTDLFLD/
-        printl "  - Pulse Agent for $3 is unpacked."  
-    else 
+        printl "  - Pulse Agent for $3 is unpacked."
+    else
         printl "  - Pulse Agent: Download NOT successful."
     fi
 }
@@ -903,11 +906,11 @@ doPulseAgentDownload() {
     PULSEURLARM64="https://$PULSEHOST/api/iotc-agent/$PULSEAGENTARM64"
 
     if [[ $CPUARCH == *"x86_64"* ]];then
-        subDownloadPulseAgent "$PULSEAGENTX86" "$PULSEURLX86" "$CPUARCH"  
+        subDownloadPulseAgent "$PULSEAGENTX86" "$PULSEURLX86" "$CPUARCH"
         elif [[ $CPUARCH == *"armv7l"* ]];then
-            subDownloadPulseAgent "$PULSEAGENTARM" "$PULSEURLARM" "$CPUARCH"      
+            subDownloadPulseAgent "$PULSEAGENTARM" "$PULSEURLARM" "$CPUARCH"
         elif [[ $CPUARCH == *"ARMv8"* ]];then
-            subDownloadPulseAgent "$PULSEAGENTARM64" "$PULSEURLARM64" "$CPUARCH" 
+            subDownloadPulseAgent "$PULSEAGENTARM64" "$PULSEURLARM64" "$CPUARCH"
         elif [[ $CPUARCH == *"i686"* ]];then
             printl "${BIRed}By the look of it, $CPUARCH is not one of the supported CPU Architectures - aborting${BIWhite}\r\n"; exit
         else
@@ -1116,7 +1119,7 @@ moduleEnrollThing() {
         TNGDEVICEID=$(cat -v /opt/vmware/iotc-agent/data/data/deviceIds.data | awk -F '^' '{print $2}' | awk -F '@' '{print $2}')
         printl "Thing device is enrolled sucessfully."
         printl "Thing ID is: $TNGDEVICEID"
-    else 
+    else
         printl "Thing device is NOT enrolled sucessfully."
     fi
 
@@ -1154,11 +1157,11 @@ moduleThingUnenroll() {
 
     ## Unenroll the Thing Device.
     /opt/vmware/iotc-agent/bin/DefaultClient unenroll --device-id=$TNGDEVICEID
-    
+
     ## Check and log success.
     if [ $? -eq 0 ]; then
         printl "Thing device unenrolled sucessfully."
-    else 
+    else
         printl "Thing device is NOT unenrolled sucessfully."
     fi
 
@@ -1197,7 +1200,7 @@ moduleGatewayUnenroll() {
     ## Check and log success.
     if [ $? -eq 0 ]; then
         printl "Gateway device unenrolled sucessfully."
-    else 
+    else
         printl "Gateway device is NOT unenrolled sucessfully."
     fi
 
@@ -1221,7 +1224,7 @@ moduleAgentUninstall() {
     /opt/vmware/iotc-agent/uninstall.sh
     if [ $? -eq 0 ]; then
         printl "Pulse Agent uninstalled sucessfully."
-    else 
+    else
         printl "Pulse Agent is NOT uninstalled sucessfully."
     fi
 }
@@ -1299,7 +1302,7 @@ Log2RAMAlreadyInstalled() {
         Log2RAM_INSTALLED="false"
     else
         printl "    - $MODULE_NAME: Is installed."
-        Log2RAM_INSTALLED="true" 
+        Log2RAM_INSTALLED="true"
     fi
 }
 
@@ -1311,7 +1314,7 @@ Log2RAMOSCheck() {
         Log2RAM_OS_CHECK="true"
     else
         printl "    - $MODULE_NAME: Incorrect OS: $OPSYS."
-        Log2RAM_OS_CHECK="false" 
+        Log2RAM_OS_CHECK="false"
     fi
 }
 
@@ -1341,14 +1344,14 @@ Log2RAMgitPreReqs() {
 Log2RAMDownloadInstall() {
     ## Download and Install Log2RAM.
     printl "    - $MODULE_NAME: Download binaries."
-    
+
     ## Download Log2RAM
     cd $WORKDIR
     git clone https://github.com/azlux/log2ram.git 2>&1 | tee -a $LOGFILE
     if [ $? -eq 0 ]; then
         printl "    - $MODULE_NAME: git clone sucessful."
         APP_DOWNLOAD_SUCCES="true"
-    else 
+    else
         printl "    - $MODULE_NAME: git clone not sucessful."
         APP_DOWNLOAD_SUCCES="false"
         return ## Exit function on failure.
@@ -1361,7 +1364,7 @@ Log2RAMDownloadInstall() {
     if [ $? -eq 0 ]; then
         printl "    - $MODULE_NAME: Installation sucessful."
         APP_INSTALL_SUCCES="true"
-    else 
+    else
         printl "    - $MODULE_NAME: Installation not sucessful."
         APP_INSTALL_SUCCES="false"
         return ## Exit function on failure.
@@ -1372,7 +1375,7 @@ Log2RAMDownloadInstall() {
 Log2RAMChangeCapacity() {
     ## Increase Log2RAM capacity
     printl "    - $MODULE_NAME: Change capacity."
-    
+
     ## Ask the user for input.
     L2RDEFVAL_I=40M
     printl "    - $MODULE_NAME: Default capacity is: $L2RDEFVAL_I"
@@ -1387,7 +1390,7 @@ Log2RAMChangeCapacity() {
         if [ $? -eq 0 ]; then
             printl "    - $MODULE_NAME: Capacity succesfully changed."
             CONF_CHANGE_SUCCES="true"
-        else 
+        else
             printl "    - $MODULE_NAME: Capacity is not changed sucessfully."
             CONF_CHANGE_SUCCES="false"
             return ## Exit function on ERROR.
@@ -1440,6 +1443,131 @@ if [[ $MYMENU == *"log2ram"* ]]; then
 fi
 
 ################################################################################
+# Configure to use the MAC address for DHCP.
+################################################################################
+
+## Module Functions
+macDHCPOSCheck() {
+    ## Check if the required OS is Raspbian.
+    printl "  - $MODULE_NAME: Check OS is Ubuntu."
+    if [[ $OPSYS == *"UBUNTU"* ]]; then
+        printl "    - $MODULE_NAME: OS is $OPSYS."
+        MACDHCP_OS_CHECK="true"
+    else
+        printl "    - $MODULE_NAME: Incorrect OS: $OPSYS."
+        MACDHCP_OS_CHECK="false"
+    fi
+}
+
+macDHCPFileCheck() {
+    ## Check if the configuration file exists.
+    if [ ! -f /etc/netplan/50-cloud-init.yaml ]; then
+        printl "    - $MODULE_NAME: Configuration file does not exist."
+        MACDHCP_CONFILE_INST="false"
+    else
+        printl "    - $MODULE_NAME: Configuration file exists."
+        MACDHCP_CONFILE_INST="true"
+    fi
+}
+
+macDHCPAlreadyInstalled() {
+    printl "    - $MODULE_NAME: Check if already configured."
+    ## Check if the macDHCP is already configured.
+    grep -Fxq "$CONF_STRING_2" "$CONF_FILE"
+    if [ $? -eq 0 ]; then
+        printl "    - $MODULE_NAME: Already configured."
+        MACDHCP_CONF="true"
+    else
+        printl "    - $MODULE_NAME: Not yet configured."
+        MACDHCP_CONF="false"
+    fi
+}
+
+macDHCPChangeConfig() {
+    ## Insert line after match found
+    # sed '/^anothervalue=.*/a after=me' test.txt
+    ## Increase macDHCP capacity
+    printl "    - $MODULE_NAME: Change capacity."
+
+    ## Check for SIZE value in the config file and make the modifications.
+
+    # printl "String 1: $CONF_STRING_1"
+    # printl "String 2: $CONF_STRING_2"
+    # printl "File    : $CONF_FILE"
+    # read -p "Press ENTER to continue ..."
+
+    if grep -Fq "$CONF_STRING_1" "$CONF_FILE"; then
+        # Replace the line with the new value.
+        sudo sed -i "/${CONF_STRING_1}/a\\$CONF_STRING_2" "$CONF_FILE"
+        # cat $CONF_FILE
+        # read -p "Press ENTER to continue ..."
+
+        ## Check and log success.
+        if [ $? -eq 0 ]; then
+            printl "    - $MODULE_NAME: Configuration succesfully changed."
+            CONF_CHANGE_SUCCES="true"
+            #netplan apply
+        else
+            printl "    - $MODULE_NAME: Misconfiguration. No changes made to configuration."
+            CONF_CHANGE_SUCCES="false"
+            return ## Exit function on ERROR.
+        fi
+        ## Have the script reboot at the end.
+        REBOOTREQUIRED=1
+    else
+        printl "    - $MODULE_NAME: ERROR - Size value not found in conf file."
+    fi
+}
+
+################################################################################
+## Module Logic
+
+macDHCP() {
+    printstatus "Configure DHCP with MAC address"
+    MODULE_NAME=macDHCP
+    CONF_FILE="/etc/netplan/50-cloud-init.yaml"
+    CONF_STRING_1='            dhcp4: true'
+    CONF_STRING_2='            dhcp-identifier: mac'
+    macDHCPOSCheck ## Check if the required OS is Ubuntu.
+
+    if [[ $MACDHCP_OS_CHECK == "true" ]]; then
+        ## Correct OS to install on.
+        macDHCPFileCheck ## Check if the required configuraiton file exists.
+        if [[ $MACDHCP_CONFILE_INST == "true" ]]; then
+            ## Configuration file exists.
+            macDHCPAlreadyInstalled ## Check if the macDHCP is already installed.
+            if [[ $MACDHCP_CONF == "false" ]]; then
+                ## macDHCP is not yet configured.
+                printl "    - $MODULE_NAME: Initiate config change"
+                macDHCPChangeConfig ## Change macDHCP capacity.
+            fi
+        else
+            printl "    - $MODULE_NAME: ERROR - No configuration file. Exit here."
+            return ## Exit function on ERROR.
+        fi
+    else
+        printl "    - $MODULE_NAME: ERROR - Incorrect OS. Exit here."
+        return ## Exit function on ERROR.
+    fi
+
+    ## Cleanup variables
+    CONF_FILE=""
+    MODULE_NAME=""
+    CONF_STRING_1=""
+    CONF_STRING_2=""
+    macDHCP_INSTALLED=""
+    MACDHCP_OS_CHECK=""
+    MACDHCP_CONF=""
+    CONF_CHANGE_SUCCES=""
+    MACDHCP_CONFILE_INST=""
+}
+
+if [[ $MYMENU == *"MACDHCP"* ]]; then
+    macDHCP
+fi
+
+
+################################################################################
 ## Some cleanup at the end...
 ################################################################################
 #rm -rf /var/cache/apt/archives/apt-fast
@@ -1456,7 +1584,7 @@ printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >> $LOGFI
 if [[ $REBOOTREQUIRED == *"1"* ]]; then
     if (whiptail --title "Script Finished" --yesno "Changes made require a REBOOT.\nOK?" 8 78); then
         printl "Script is Finished. Rebooting now."
-        shutdown -r now 
+        shutdown -r now
     else
         whiptail --title "Script Finished" --msgbox "Changes made require a REBOOT.\nPlease reboot ASAP." 8 78
         echo ""
