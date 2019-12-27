@@ -5,7 +5,7 @@
 # Date last update: 08/14/19
 # Author: Marco Tijbout
 #
-# Version 0.9k
+# Version 0.9l
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -28,6 +28,8 @@
 # Version history:
 # 1.0  Marco Tijbout:
 #   Publishing of script to public.
+# 0.9l Marco Tijbout:
+#   Adapting for Arch Linux support.
 # 0.9k Marco Tijbout:
 #   Making everything modular with functions.
 #   MACDHCP: New module to configure MAC address usage for DHCP requests.
@@ -109,7 +111,13 @@ OPSYS=${ID^^}
 # printl "OPSYS: $OPSYS"
 
 ## If the OS is exotic, exit.
-if [[ $OPSYS != *"PHOTON"* ]] && [[ $OPSYS != *"RASPBIAN"* ]] && [[ $OPSYS != *"DEBIAN"* ]] && [[ $OPSYS != *"UBUNTU"* ]] && [[ $OPSYS != *"CENTOS"* ]] && [[ $OPSYS != *"DIETPI"* ]]; then
+if  [[ $OPSYS != *"ARCH"* ]] && \
+    [[ $OPSYS != *"PHOTON"* ]] && \
+    [[ $OPSYS != *"RASPBIAN"* ]] && \
+    [[ $OPSYS != *"DEBIAN"* ]] && \
+    [[ $OPSYS != *"UBUNTU"* ]] && \
+    [[ $OPSYS != *"CENTOS"* ]] && \
+    [[ $OPSYS != *"DIETPI"* ]]; then
     printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"; exit
 fi
 
@@ -117,16 +125,25 @@ fi
 if [[ $OPSYS == *"CENTOS"* ]]; then
     PCKMGR="yum"
     printl "For use with $OPSYS the package manager is set to $PCKMGR"
+    PCK_INST="install -y"
     AQUIET="--quiet"
     NQUIET="-s"
     elif [[ $OPSYS == *"PHOTON"* ]]; then
     PCKMGR="tdnf"
     printl "For use with $OPSYS the package manager is set to $PCKMGR"
+    PCK_INST="install -y"
     AQUIET="--quiet"
+    NQUIET=""
+    elif [[ $OPSYS == *"ARCH"* ]]; then
+    PCKMGR="pacman"
+    printl "For use with $OPSYS the package manager is set to $PCKMGR"
+    PCK_INST="-S --noconfirm"
+    AQUIET=""
     NQUIET=""
 else
     PCKMGR="apt-get"
     printl "For use with $OPSYS the package manager is set to $PCKMGR"
+    PCK_INST="install -y"
     AQUIET="-qq"
     NQUIET="-s"
 fi
@@ -212,7 +229,7 @@ printstatus "Making sure THE SCRIPT works..."
 #testInternetConnection
 
 ## Install required software for functional menu.
-$PCKMGR $AQUIET -y install whiptail ccze net-tools curl 2>&1 | tee -a $LOGFILE
+$PCKMGR $AQUIET $PCK_INST whiptail ccze net-tools curl 2>&1 | tee -a $LOGFILE
 
 ## Photon
 # tdnf install rpm-build
@@ -224,7 +241,8 @@ install_lsb_release() {
     else
         LSB_PACKAGE="lsb-release"
     fi
-    [ ! -x /usr/bin/lsb_release ] && $PCKMGR $AQUIET -y update > /dev/null 2>&1 && $PCKMGR $AQUIET -y install $LSB_PACKAGE 2>&1 | tee -a $LOGFILE
+    # [ ! -x /usr/bin/lsb_release ] && $PCKMGR $AQUIET -y update > /dev/null 2>&1 && $PCKMGR $AQUIET $PCK_INST $LSB_PACKAGE 2>&1 | tee -a $LOGFILE
+    [ ! -x /usr/bin/lsb_release ] && $PCKMGR $AQUIET $PCK_INST $LSB_PACKAGE 2>&1 | tee -a $LOGFILE
 }
 install_lsb_release
 
@@ -489,11 +507,13 @@ fi
 moduleUpdateHost() {
     printstatus "Update the Host with the latest available updates..."
 
-    if [[ $ == *"CENTOS"* ]]; then
+    if [[ $OPSYS == *"CENTOS"* ]]; then
         $PCKMGR $AQUIET check-update 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET -y autoremove 2>&1 | tee -a $LOGFILE
         #$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
+    elif [[ $OPSYS == *"ARCH"* ]]; then
+        $PCKMGR -Syu 2>&1 | tee -a $LOGFILE
     else
         $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET -y upgrade 2>&1 | tee -a $LOGFILE
@@ -736,6 +756,9 @@ alias ..='cd ..'    # up
 alias watch='watch -d -n 1' # update every 1 second, showing changes
 alias cls='clear'
 alias br='source ~/.bash_profile'
+alias bashrc="nano ~/.bashrc && source ~/.bashrc"
+alias bash_aliases="nano ~/.bash_aliases && source ~/.bash_aliases"
+alias nocomment="grep -Ev '^(#|$)'"
 EOF
     fi
 
@@ -821,7 +844,8 @@ testPulseInstanceConnectivity(){
     printl "  - Pulse Agent: Test connection to Pulse Instance: $PULSEHOST"
     if [[ $OPSYS == *"CENTOS"* ]]; then
         ## Install nc if not present.
-        [ ! -x /bin/nc ] && $PCKMGR $AQUIET -y update > /dev/null 2>&1 && $PCKMGR $AQUIET -y install nc 2>&1 | tee -a $LOGFILE
+        # [ ! -x /bin/nc ] && $PCKMGR $AQUIET -y update > /dev/null 2>&1 && $PCKMGR $AQUIET $PCK_INST nc 2>&1 | tee -a $LOGFILE
+        [ ! -x /bin/nc ] && $PCKMGR $AQUIET $PCK_INST nc 2>&1 | tee -a $LOGFILE
     fi
 
     if nc -w $TIMEOUT -z $PULSEHOST $PULSEPORT; then
@@ -1250,7 +1274,7 @@ modulePackageCli() {
 
     printstatus "Download the package-cli to the Gateway..."
     ## Make sure unzip is installed.
-    $PCKMGR $AQUIET -y install unzip 2>&1 | tee -a $LOGFILE
+    $PCKMGR $AQUIET $PCK_INST unzip 2>&1 | tee -a $LOGFILE
 
     ## Gather all information for downloading file.
     PULSEINSTANCE=$(whiptail --inputbox "\nEnter your Pulse Console Instance (for example iotc001,iotc002, etc.):\n" --title "Installation Package-CLI" 8 60 $PULSEINSTANCE 3>&1 1>&2 2>&3)
@@ -1328,7 +1352,7 @@ Log2RAMgitPreReqs() {
     else
         printl "    - $MODULE_NAME: git is not installed. Install."
         GIT_INSTALLED="false"
-        $PCKMGR $AQUIET -y install git 2>&1 | tee -a $LOGFILE
+        $PCKMGR $AQUIET $PCK_INST git 2>&1 | tee -a $LOGFILE
         ## Check and log success.
         if [ $? -eq 0 ]; then
             printl "    - $MODULE_NAME: git installed sucessfully."
