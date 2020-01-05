@@ -2,10 +2,10 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 04/27/19
-# Date last update: 08/14/19
+# Date last update: 06/jan/20
 # Author: Marco Tijbout
 #
-# Version 0.9l
+# Version 0.9m
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -28,6 +28,9 @@
 # Version history:
 # 1.0  Marco Tijbout:
 #   Publishing of script to public.
+# 0.9m Marco Tijbout:
+#   Added some aliases.
+#   Change ownership to executor of theScript and not root.
 # 0.9l Marco Tijbout:
 #   Adapting for Arch Linux support.
 # 0.9k Marco Tijbout:
@@ -73,7 +76,7 @@
 ################################################################################
 
 ## Version of theScript.sh
-SCRIPT_VERSION="0.9k"
+SCRIPT_VERSION="0.9m"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -759,9 +762,11 @@ alias br='source ~/.bash_profile'
 alias bashrc="nano ~/.bashrc && source ~/.bashrc"
 alias bash_aliases="nano ~/.bash_aliases && source ~/.bash_aliases"
 alias nocomment="grep -Ev '^(#|$)'"
+alias catnc="grep -Ev '^(#|$)'"
+alias update='sudo apt update && sudo apt upgrade -y && sudo apt autoremove && sudo apt autoclean'
 EOF
     fi
-
+    chown ${USERID}:${USERID} $TARGETFILE
     ## Cleanup variables
     TARGETFILE=""
     WORKFILE2=""
