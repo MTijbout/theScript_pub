@@ -732,11 +732,11 @@ EOF
     if grep -Fxq "## Create script with header. Usage: cscript scriptname.sh" $TARGETFILE
     then
         printl "String found, $TARGETFILE does not need updating."
-        break
     else
         printl "String not found, settings will be added to $TARGETFILE"
         echo "" >> $TARGETFILE
         cat "$WORKFILE3" >> $TARGETFILE
+        rm $WORKFILE3
     fi
     ## Cleanup variables
     TARGETFILE=""
