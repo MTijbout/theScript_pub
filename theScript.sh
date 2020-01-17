@@ -719,6 +719,7 @@ moduleAddCscript () {
     TARGETFILE="$WORKDIR/.bashrc"
     WORKFILE3="$WORKDIR/cscript"
     cat > $WORKFILE3 <<EOF
+
 ## Create script with header. Usage: cscript scriptname.sh
 cscript(){
     touch "$@";
@@ -726,6 +727,7 @@ cscript(){
     echo '#!/usr/bin/env bash' > "$@";
     nano "$@";
 }
+
 EOF
     if grep -Fxq "## Create script with header. Usage: cscript scriptname.sh" $TARGETFILE
     then
@@ -734,7 +736,7 @@ EOF
     else
         printl "String not found, settings will be added to $TARGETFILE"
         echo "" >> $TARGETFILE
-        echo "$WORKFILE3" >> $TARGETFILE
+        cat "$WORKFILE3" >> $TARGETFILE
     fi
     ## Cleanup variables
     TARGETFILE=""
