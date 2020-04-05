@@ -27,7 +27,7 @@
 #
 # Version history:
 # 0.9na  Marco Tijbout:
-#   Removed VMware Pulse stuff.
+#   Removed VMware Pulse stuff. 
 # 0.9n Marco Tijbout:
 #   ADD_CSCRIPT: New moddule to add cscript to .bashrc
 # 0.9m Marco Tijbout:
