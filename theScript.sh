@@ -1,8 +1,8 @@
 #!/bin/bash
 ################################################################################
 # Filename: theScript.sh
-# Date Created: 04/27/19
-# Date last update: 17/jan/20
+# Date Created: 27/apr/19
+# Date last update: 27/aug/20
 # Author: Marco Tijbout
 #
 # Version 0.9o
@@ -26,7 +26,6 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
-<<<<<<< HEAD
 # 0.9o Marco Tijbout:
 #   Fixed IP addressing for CentOS
 #   LOCAL_MIRROR: New module to add the local (NL) mirror to apt
@@ -35,10 +34,6 @@
 #   ADD_CSCRIPT: Fixed variables not gettign over.
 #   VMware Pulse: Disabled the section by removing the entry to the menu. Modules
 #   are still available.
-=======
-# 0.9na  Marco Tijbout:
-#   Removed VMware Pulse stuff. 
->>>>>>> 11e2e4e221105c43087fc3ff0bbfc63acc2f3511
 # 0.9n Marco Tijbout:
 #   ADD_CSCRIPT: New moddule to add cscript to .bashrc
 # 0.9m Marco Tijbout:
