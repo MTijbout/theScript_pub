@@ -2,10 +2,10 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 04/27/19
-# Date last update: 05/apr/20
+# Date last update: 17/jan/20
 # Author: Marco Tijbout
 #
-# Version 0.9na
+# Version 0.9o
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -26,8 +26,14 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
-# 0.9na  Marco Tijbout:
-#   Removed VMware Pulse stuff.
+# 0.9o Marco Tijbout:
+#   Fixed IP addressing for CentOS
+#   LOCAL_MIRROR: New module to add the local (NL) mirror to apt
+#   DATETIME: Introduced the date and time of script execution stored in a
+#   variableto be repurposed in the script.
+#   ADD_CSCRIPT: Fixed variables not gettign over.
+#   VMware Pulse: Disabled the section by removing the entry to the menu. Modules
+#   are still available.
 # 0.9n Marco Tijbout:
 #   ADD_CSCRIPT: New moddule to add cscript to .bashrc
 # 0.9m Marco Tijbout:
@@ -78,7 +84,7 @@
 ################################################################################
 
 ## Version of theScript.sh
-SCRIPT_VERSION="0.9na"
+SCRIPT_VERSION="0.9o"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -89,9 +95,14 @@ USERID=$(logname)
 # fi
 WORKDIR=/home/$USERID
 
+## Current date and time of script execution
+DATETIME=`date +%Y%m%d_%H%M`
+# `date +%Y-%m-%d_%Hh%Mm`
+# ${DATETIME}
+
 SCRIPT_NAME=`basename "$0"`
 ## Log file definition
-LOGFILE=$WORKDIR/$SCRIPT_NAME-`date +%Y-%m-%d_%Hh%Mm`.log
+LOGFILE=$WORKDIR/$SCRIPT_NAME-${DATETIME}.log
 
 ## Logging and ECHO functionality combined.
 printl() {
@@ -273,7 +284,7 @@ main_menu1() {
     MMENU1=$(whiptail --title "Main Menu Selection" --checklist --notags \
         "\nSelect items as required then hit OK " 25 75 16 \
         "QUIET" "Quiet(er) install - untick for lots of info " OFF \
-        "CUST_OPS" "Menu - Customization options " ON \
+        "CUST_OPS" "Menu - Customization options " OFF \
         "SEC_OPS" "Menu - Options for securing the system " OFF \
         "log2ram" "Install Log2RAM with custom capacity " OFF \
         3>&1 1>&2 2>&3)
@@ -289,9 +300,11 @@ sub_menu1() {
     SMENU1=$(whiptail --checklist --notags --title "Select customization options" \
         "\nSelect items as required then hit OK " 25 75 16 \
         "SHOW_IP" "Show IP on logon screen " OFF \
-        "MACDHCP" "Configure to use MAC for DHCP " ON \
+        "MACDHCP" "Configure to use MAC for DHCP " OFF \
+        "IP_FIX" "Configure IP networking " OFF \
         "CUSTOM_PROMPT" "Updated Prompt " OFF \
         "ADD_CSCRIPT" "Add cscript to .bashrc " OFF \
+        "LOCAL_MIRROR" "Add local mirror for APT " OFF \
         "CUSTOM_ALIAS" "Aliases for ease of use " OFF \
         "CHANGE_LANG" "Change Language to US-English " OFF \
         "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
@@ -312,6 +325,20 @@ printl "Output SubMenu2: $SMENU2"
 MYMENU="$MYMENU $SMENU2"
 }
 
+sub_menu3() {
+    SMENU3=$(whiptail --checklist --notags --title "Select Pulse options" \
+        "\nSelect items as required then hit OK " 25 75 16 \
+        "PULSE_AGENT" "Install VMware Pulse Center Agent " OFF \
+        "ENROLL_GATEWAY" "Enroll Gateway to Pulse " OFF \
+        "ENROLL_THING" "Enroll Thing onto Gateway " OFF \
+        "PACKAGE_CLI" "Download the Pulse package cli " OFF \
+        "THING_UNENROLL" "Unenroll Thing from Gateway " OFF \
+        "GATEWAY_UNENROLL" "Unenroll Gateway from Pulse " OFF \
+        "AGENT_UNINSTALL" "Uninstall Agent from Gateway " OFF \
+        3>&1 1>&2 2>&3)
+printl "Output SubMenu3: $SMENU3"
+MYMENU="$MYMENU $SMENU3"
+}
 
 ################################################################################
 ## Calling the Menus
@@ -329,6 +356,10 @@ if [[ $MYMENU == *"SEC_OPS"* ]]; then
     sub_menu2
 fi
 
+if [[ $MYMENU == *"PULSE_OPS"* ]]; then
+    sub_menu3
+fi
+
 if [[ $MYMENU != *"QUIET"* ]]; then
     AQUIET=""
     NQUIET=""
@@ -342,6 +373,72 @@ fi
 ################################################################################
 ##                  - Executing on the selected items -                       ##
 ################################################################################
+
+################################################################################
+# DCHP or Fixed IP addressing. @@@
+################################################################################
+
+## Module Functions
+fixipCheckOS() {
+    if  [[ $OPSYS != *"CENTOS"* ]] ; then
+        printl "${BIRed}By the look of it, not one of the supported operating systems for this function.${BIWhite}\r\n"
+        SUPPORTED_OS=false
+    else
+        SUPPORTED_OS=true
+    fi
+}
+
+# fixipNewUUID() {
+#     # Dialog to ask for UUID generation
+#     # If yes, generate new UUID
+# }
+
+pruts01(){
+    if [ $? -eq 0 ]; then
+            printl "    - Pulse Agent: Successfully uninstalled the agent."
+            UNINSTALL_AGENT_SUCCES=true
+        else
+            printl "   - Pulse Agent: Agent NOT uninstalled succesfully"
+            UNINSTALL_AGENT_SUCCES=false
+        fi
+
+    if  [[ $OPSYS != *"ARCH"* ]] && \
+        [[ $OPSYS != *"PHOTON"* ]] && \
+        [[ $OPSYS != *"RASPBIAN"* ]] && \
+        [[ $OPSYS != *"DEBIAN"* ]] && \
+        [[ $OPSYS != *"UBUNTU"* ]] && \
+        [[ $OPSYS != *"CENTOS"* ]] && \
+        [[ $OPSYS != *"DIETPI"* ]]; then
+        printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"; exit
+    fi
+}
+
+## Module Logic
+moduleIPFix() {
+    printstatus "Configure network settings..."
+
+    # Check if run on supported OS
+    fixipCheckOS
+    if [[ $SUPPORTED_OS == "true" ]]; then
+        # Check if DHCP is enabled or Fixed IP
+        fixipCheckDHCP
+        if [[ $DHCP_ON == "true" ]]; then
+            # Ask for new UUID generation
+            fixipNewUUID
+        fi
+    fi
+    ## Reboot required? 0=no 1=yes
+    REBOOTREQUIRED=0
+
+    ## Cleanup variables
+    SUPPORTED_OS=""
+}
+
+if [[ $MYMENU == *"IP_FIX"* ]]; then
+    moduleIPFix
+fi
+
+
 
 ################################################################################
 # Force the system to use en_US as the language.
@@ -666,7 +763,13 @@ moduleCustomPrompt () {
     printstatus "Change the prompt to a more user friendly one..."
 
     TARGETFILE="$WORKDIR/.bashrc"
-    NEWPROMPT="export PS1='\${debian_chroot:+(\$debian_chroot)}\[\033[00;33m\]\n   \u \[\033[01;34m\] at \[\033[00;33m\] \h\[\033[00m\] \[\033[01;34m\]in \[\033[00;33m\]\w\[\033[00m\]\n\\$ '"
+
+    OPSYS=${ID^}            # First letter uppercase
+    OPVER=${VERSION_ID^}    # First letter uppercase
+    # Original modification:
+    # NEWPROMPT="export PS1='\${debian_chroot:+(\$debian_chroot)}\[\033[00;33m\]\n   \u \[\033[01;34m\] at \[\033[00;33m\] \h\[\033[00m\] \[\033[01;34m\]in \[\033[00;33m\]\w\[\033[00m\]\n\\$ '"
+    # New modification:
+    NEWPROMPT="export PS1='\${debian_chroot:+(\$debian_chroot)}\n\$OPSYS \$OPVER:\[\033[00;33m\] \u\[\033[01;34m\] at \[\033[00;33m\]\h\[\033[00m\] \[\033[01;34m\]in \[\033[00;33m\]\w\[\033[00m\]\n\\$ '"
 
     if grep -Fxq "## Custom prompt settings added ..." $TARGETFILE
     then
@@ -676,6 +779,9 @@ moduleCustomPrompt () {
         printl "String not found, settings will be added to $TARGETFILE"
         echo "" >> $TARGETFILE
         echo "## Custom prompt settings added ..." >> $TARGETFILE
+        echo ". /etc/os-release" >> $TARGETFILE
+        echo "OPSYS=\${ID^}" >> $TARGETFILE
+        echo "OPVER=\${VERSION_ID^}" >> $TARGETFILE
         echo "$NEWPROMPT" >> $TARGETFILE
     fi
     ## Cleanup variables
@@ -703,10 +809,10 @@ moduleAddCscript () {
 
 ## Create script with header. Usage: cscript scriptname.sh
 cscript(){
-    touch "$@";
-    chmod +x "$@";
-    echo '#!/usr/bin/env bash' > "$@";
-    nano "$@";
+    touch "\$@";
+    chmod +x "\$@";
+    echo '#!/usr/bin/env bash' > "\$@";
+    nano "\$@";
 }
 
 EOF
@@ -726,6 +832,40 @@ EOF
 
 if [[ $MYMENU == *"ADD_CSCRIPT"* ]]; then
     moduleAddCscript
+fi
+
+################################################################################
+# Add local mirror (NL).
+################################################################################
+
+## Module Functions
+
+## Module Logic
+moduleLocalMirror () {
+    printstatus "Change the apt mirror to a local one..."
+
+    ## Check if this is Raspbian
+    if [[ $OPSYS != *"RASPBIAN"* ]]; then
+        printl "Wrong OS to configure mirror for..."
+        return
+    else
+        ## Prepare settings as variables
+        TARGETFILE="/etc/apt/sources.list"
+        PATTERN_IN="http://raspbian.raspberrypi.org/raspbian/"
+        PATTERN_OUT="http://mirror.nl.leaseweb.net/raspbian/raspbian"
+
+        ## Search for input pattern and replace by output pattern
+        sed -i.bak-${DATETIME} 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+    fi
+
+    ## Cleanup variables
+    TARGETFILE=""
+    PATTERN_IN=""
+    PATTERN_OUT=""
+}
+
+if [[ $MYMENU == *"LOCAL_MIRROR"* ]]; then
+    moduleLocalMirror
 fi
 
 ################################################################################
@@ -822,6 +962,526 @@ moduleNoPassSudo() {
 
 if [[ $MYMENU == *"NO_PASS_SUDO"* ]]; then
     moduleNoPassSudo
+fi
+
+################################################################################
+# Install the VMware Pulse Agent.
+################################################################################
+
+## Module Functions
+
+pulseAgentAlreadyInstalled() {
+    printl "  - Pulse Agent: Check if already installed."
+    ## Check if the pulse agent is already installed.
+    if [ ! -f /opt/vmware/iotc-agent/version ]; then
+        printl "    - Pulse Agent: Not installed."
+        PLSAGTINSTALLED="false"
+    else
+        printl "    - Pulse Agent: Is installed."
+        PLSAGTINSTALLED="true"
+    fi
+}
+
+pulseAgentResinstall() {
+    printl "  - Pulse Agent: Check to reinstall the Pulse Agent."
+    if (whiptail --title "Pulse Agent Installed" --yesno "Pulse agent is already installed. Reinstall?\nOK?" 8 78); then
+        ## Reinstall the agent.
+        printl "    - Pulse Agent: Selection to reinstall the agent."
+        PLSAGTREINSTALL="true"
+    else
+        ## User does not want to reinstall the agent when it is already installed.
+        printl "    - Pulse Agent: Selection NOT to reinstall the agent."
+        PLSAGTREINSTALL="false"
+        return
+    fi
+}
+
+getPulseInstanceDetails() {
+    printl "  - Pulse Agent: Collect required environment details."
+    ## Collect details of the targeted Pulse environment.
+    PULSEINSTANCE="iotc011"
+    PULSEINSTANCE=$(whiptail --inputbox "\nEnter your Pulse Console Instance\n(for example iotc001,iotc002, etc.):\n" --title "Installation Pulse Agent" 10 60 $PULSEINSTANCE 3>&1 1>&2 2>&3)
+    PULSEADDENDUM=".vmware.com"
+    printl "    - Pulse instance: $PULSEINSTANCE"
+    PULSEHOST="$PULSEINSTANCE$PULSEADDENDUM"
+    printl "    - Pulse host: $PULSEHOST"
+    PULSEPORT=443
+    TIMEOUT=1
+}
+
+testPulseInstanceConnectivity(){
+    ## TEST CONNECTION TO YOUR PULSE INSTANCE"
+    printl "  - Pulse Agent: Test connection to Pulse Instance: $PULSEHOST"
+    if [[ $OPSYS == *"CENTOS"* ]]; then
+        ## Install nc if not present.
+        # [ ! -x /bin/nc ] && $PCKMGR $AQUIET -y update > /dev/null 2>&1 && $PCKMGR $AQUIET $PCK_INST nc 2>&1 | tee -a $LOGFILE
+        [ ! -x /bin/nc ] && $PCKMGR $AQUIET $PCK_INST nc 2>&1 | tee -a $LOGFILE
+    fi
+
+    if nc -w $TIMEOUT -z $PULSEHOST $PULSEPORT; then
+        printl "    - Connection to the Pulse Server ${PULSEHOST} was Successful"
+    else
+        printl "    CONNECTION FAILED!"
+        printl "    Connection to the Pulse Server ${PULSEHOST} Failed"
+        printl "    Please Confirm if the Pulse URL is correct"
+        printl "    If the Pulse URL is correct, then please ensure that we can open an outbound HTTPS connection to the Pulse Server over port 443"
+        return
+    fi
+}
+
+getPulseAgentLatestVersionInfo() {
+    ## Determine agent version to be downloaded.
+    printl "  - Pulse Agent: Get information on latest Pulse Agent available."
+    PULSE_MANIFEST="https://$PULSEINSTANCE.vmware.com/api/iotc-agent/manifest.json"
+    printl "    - Manifest file: $PULSE_MANIFEST"
+    printl "    - Download folder: $PLSAGTDLFLD"
+    printl "    - Manifest file: $PLSAGTDLFLD/manifest.json"
+    printl ""
+    printl ""
+    curl -o $PLSAGTDLFLD/manifest.json $PULSE_MANIFEST 2>&1 | tee -a $LOGFILE
+    if [ $? -eq 0 ]; then
+        printl "    - Pulse Agent: Manifest download successful."
+    else
+        printl "    - Pulse Agent: Manifest download NOT successful."
+    fi
+    PLSAGTVERSION=$(awk -F'"' '{print $8}' $PLSAGTDLFLD/manifest.json)
+    printl "    - Pulse Agent: Available for download: $PLSAGTVERSION "
+}
+
+compareLatestPulseAgentVersion() {
+    printl "  - Pulse Agent: Compare the versions."
+    PLSAGTINSTALLVER=$(cat /opt/vmware/iotc-agent/version)
+    printl "    - Installed version: $PLSAGTINSTALLVER"
+    if [ -z "$PLSAGTINSTALLVER" ]; then
+        ## There is no value in variable.
+        printl "  ERROR: Empty variable. Cannot proceed."
+        return
+    else
+        printl "    - Available version: $PLSAGTVERSION"
+        if [[ "$PLSAGTINSTALLVER" == "$PLSAGTVERSION" ]]; then
+            PLSAGTLATEST="true"
+            printl "    - Latest version is installed."
+        else
+            PLSAGTLATEST="false"
+            printl "    - Older version installed: $PLSAGTINSTALLVER"
+        fi
+    fi
+}
+
+checkPulseAgentDownload() {
+    printl "Future: Check if Pulse Agent is already downloaded"
+    ## Check if the agent is already downloaded. CHECKSUM?
+    # Make sure we do not download unnecessary.
+}
+
+subDownloadPulseAgent() {
+    ## Downloading the agent.
+    printl ""
+    printl ""
+    curl -o $PLSAGTDLFLD/$1 $2 2>&1 | tee -a $LOGFILE
+    if [ $? -eq 0 ]; then
+        printl "  - Pulse Agent: Download successful."
+        ## Unpacking the agent.
+        printl "  - Unpack $PLSAGTDLFLD/$1"
+        tar -xzf $PLSAGTDLFLD/$1 -C $PLSAGTDLFLD/
+        printl "  - Pulse Agent for $3 is unpacked."
+    else
+        printl "  - Pulse Agent: Download NOT successful."
+    fi
+}
+
+doPulseAgentDownload() {
+    printl "  - Pulse Agent: Initiating download."
+    PULSEAGENTX86="iotc-agent-x86_64-$PLSAGTVERSION.tar.gz"
+    PULSEAGENTARM="iotc-agent-arm-$PLSAGTVERSION.tar.gz"
+    PULSEAGENTARM64="iotc-agent-aarch64-$PLSAGTVERSION.tar.gz"
+    PULSEURLX86="https://$PULSEHOST/api/iotc-agent/$PULSEAGENTX86"
+    PULSEURLARM="https://$PULSEHOST/api/iotc-agent/$PULSEAGENTARM"
+    PULSEURLARM64="https://$PULSEHOST/api/iotc-agent/$PULSEAGENTARM64"
+
+    if [[ $CPUARCH == *"x86_64"* ]];then
+        subDownloadPulseAgent "$PULSEAGENTX86" "$PULSEURLX86" "$CPUARCH"
+        elif [[ $CPUARCH == *"armv7l"* ]];then
+            subDownloadPulseAgent "$PULSEAGENTARM" "$PULSEURLARM" "$CPUARCH"
+        elif [[ $CPUARCH == *"ARMv8"* ]];then
+            subDownloadPulseAgent "$PULSEAGENTARM64" "$PULSEURLARM64" "$CPUARCH"
+        elif [[ $CPUARCH == *"i686"* ]];then
+            printl "${BIRed}By the look of it, $CPUARCH is not one of the supported CPU Architectures - aborting${BIWhite}\r\n"; exit
+        else
+            printl "${BIRed}By the look of it, $CPUARCH is not one of the supported CPU Architectures - aborting${BIWhite}\r\n"; exit
+    fi
+
+    ## Set permissions
+    chmod 777 $PLSAGTDLFLD/iotc-agent/install.sh
+    chmod 777 $PLSAGTDLFLD/iotc-agent/uninstall.sh
+}
+
+doPulseAgentInstall() {
+    ## Installing the agent
+    printl "  - Pulse Agent: Install the Agent."
+    printl ""
+    printl ""
+    $PLSAGTDLFLD/iotc-agent/install.sh 2>&1 | tee -a $LOGFILE
+    if [ $? -eq 0 ]; then
+        printl "    - Pulse Agent: Installed in /opt/vmware/iotc-agent"
+    else 
+        printl "    - Pulse Agent: Installation NOT succesful."
+    fi
+}
+
+doPulseAgentUninstall() {
+    ## Uninstall the Pulse Agent
+    printl "  - Pulse Agent: Uninstall the agent."
+    printl ""
+    printl ""
+    /opt/vmware/iotc-agent/uninstall.sh 2>&1 | tee -a $LOGFILE
+    if [ $? -eq 0 ]; then
+        printl "    - Pulse Agent: Successfully uninstalled the agent."
+        UNINSTALL_AGENT_SUCCES=true
+    else
+        printl "   - Pulse Agent: Agent NOT uninstalled succesfully"
+        UNINSTALL_AGENT_SUCCES=false
+    fi
+}
+
+## Module Logic
+modulePulseAgent() {
+    printstatus "Installation of the Pulse Agent..."
+
+    ## Module variables
+    PLSAGTINSTALLED="false"
+    PLSAGTREINSTALL=0
+    PLSAGTDLFLD=/tmp/pulseagent
+
+    ## Module requirements
+    if [ ! -d "$PLSAGTDLFLD" ]; then
+        mkdir -p $PLSAGTDLFLD
+    fi
+
+    # @@@
+    getPulseInstanceDetails
+    testPulseInstanceConnectivity
+    getPulseAgentLatestVersionInfo
+    pulseAgentAlreadyInstalled
+    if [[ $PLSAGTINSTALLED == "true" ]]; then
+        # printl "Pulse Agent is installed."
+        # Check now if it is the latest version.
+        compareLatestPulseAgentVersion
+        if [[ $PLSAGTLATEST == "true" ]]; then
+            # Pulse Agent is the latest verstion."
+            # Check now if user want's to reinstall
+            pulseAgentResinstall
+            if [[ $PLSAGTREINSTALL == "true" ]]; then
+                # User wants to reinstall the Pulse Agent
+                doPulseAgentUninstall
+                doPulseAgentDownload
+                doPulseAgentInstall
+            else
+                # User does not want to reinstall the Pulse Agent.
+                # Exit the function.
+                printl "    - Pulse Agent: Nothing more to do. Exiting installation loop."
+                return
+            fi
+        else
+            # Pulse agent is installed, but not the latest version.
+            doPulseAgentUninstall
+            doPulseAgentDownload
+            doPulseAgentInstall
+        fi
+    else
+        # printl "Pulse Agent is not installed."
+        # Let's go install the agent.
+        doPulseAgentDownload
+        doPulseAgentInstall
+    fi
+
+## Cleanup variables
+PLSAGTDLFLD=""
+PLSAGTVERSION=""
+PULSEINSTANCE=""
+PULSEADDENDUM=""
+PULSEHOST=""
+PULSEPORT=""
+TIMEOUT=""
+PULSEAGENTX86=""
+PULSEAGENTARM=""
+PULSEAGENTARM64=""
+PULSEURLX86=""
+PULSEURLARM=""
+PULSEURLARM64=""
+PLSAGTREINSTALL=""
+PLSAGTINSTALLED=""
+
+printl "  - Pulse Agent: Nothing more to do. Exiting this part."
+printl ""
+
+}
+if [[ $MYMENU == *"PULSE_AGENT"* ]]; then
+    modulePulseAgent
+fi
+
+################################################################################
+# Enroll a Gateway Device into Pulse.
+################################################################################
+
+## Module Functions
+
+## Module Logic
+
+moduleEnrollGateway() {
+    printstatus "Enrolling the Gateway to Pulse..."
+    if [ ! -f /opt/vmware/iotc-agent/bin/DefaultClient ]; then 
+        printf "${BIRed}Pulse agent is not installed - aborting${BIWhite}\r\n"; exit
+    fi
+    ##
+    ## Add to the check if not installed, have it installed.
+    ## 
+    OLDNAME="$(uname -n)"
+    TMPLNAME=G-UbuntuVM-MT-01
+    GWNAME=CentOSVM-MT-LC01
+    TMPPWFILE=/tmp/mypassword
+    TMPLNAME=$(whiptail --inputbox "\nEnter the name of the Template to be used for your Gateway):\n" --title "Installation Pulse Agent" 8 60 $TMPLNAME 3>&1 1>&2 2>&3)
+    GWNAME=$(whiptail --inputbox "\nEnter the name for your Gateway):\n" --title "Installation Pulse Agent" 8 60 $OLDNAME 3>&1 1>&2 2>&3)
+    GWADMIN=$(whiptail --inputbox "\nEnter the username to enroll your Gateway):\n" --title "Installation Pulse Agent" 8 60 $GWADMIN 3>&1 1>&2 2>&3)
+
+    USERPASS=$(whiptail --passwordbox "Enter a user password" 8 60 3>&1 1>&2 2>&3)
+    if [[ -z "${USERPASS// }" ]]; then
+        printf "No user password given - aborting${BIWhite}\r\n"; exit
+    fi
+
+    echo -n "$USERPASS" >$TMPPWFILE
+    if [ $? -eq 0 ]; then
+        printl "Password is stored."
+    else 
+        printl "Password could not be stored in $TMPPWFILE"
+    fi
+    /opt/vmware/iotc-agent/bin/DefaultClient enroll --auth-type=BASIC --template=$TMPLNAME --name=$GWNAME --username=$GWADMIN --password=file:$TMPPWFILE
+    if [ $? -eq 0 ]; then
+        GWDEVICEID=$(cat -v /opt/vmware/iotc-agent/data/data/deviceIds.data | awk -F '^' '{print $1}' | awk -F '@' '{print $1}')
+        printl "Gateway ID is: $GWDEVICEID"
+    else 
+        printl "Gateway is NOT enrolled sucessfully."
+    fi
+
+    ## Remove the temporary password file.
+    rm -f $TMPPWFILE
+
+    ## Cleanup variables
+    OLDNAME=""
+    TMPLNAME=""
+    GWNAME=""
+    GWADMIN=""
+    USERPASS=""
+    TMPPWFILE=""
+}
+
+if [[ $MYMENU == *"ENROLL_GATEWAY"* ]]; then
+    moduleEnrollGateway
+fi
+
+################################################################################
+# Enroll a Thing Device onto the Gateway Device.
+################################################################################
+
+## Module Functions
+
+## Module Logic
+
+moduleEnrollThing() {
+    printstatus "Enrolling a THING onto the Gateway..."
+
+    ## Check if agent is installed.
+    if [ ! -f /opt/vmware/iotc-agent/bin/DefaultClient ]; then 
+        printf "${BIRed}Pulse agent is not installed - aborting${BIWhite}\r\n"; exit
+    fi
+
+    ## Check if Gateway is enrolled.
+    GWDEVICEID=$(cat -v /opt/vmware/iotc-agent/data/data/deviceIds.data | awk -F '^' '{print $1}' | awk -F '@' '{print $1}')
+    if [[ $GWDEVICEID == "" ]]; then
+        printf "${BIRed}Gateway is not enrolled yet - aborting${BIWhite}\r\n"; exit
+    fi
+
+    ## Gather details for enrolling Thing to Gateway.
+    TTMPLNAME=$(whiptail --inputbox "\nEnter the name of the Template to be used for your Thing Device):\n" --title "Enroll a THING to Gateway" 8 60 $TTMPLNAME 3>&1 1>&2 2>&3)
+    TNGNAME=$(whiptail --inputbox "\nEnter the name for your Thing Device):\n" --title "Enroll THING to Gateway" 8 60 3>&1 1>&2 2>&3)
+
+    ## Enroll the Thing.
+    # Check agent version. Use for latest.
+    /opt/vmware/iotc-agent/bin/DefaultClient enroll-device --template=$TTMPLNAME --name=$TNGNAME --parent-id=$GWDEVICEID
+
+    ## Check and log success.
+    if [ $? -eq 0 ]; then
+        TNGDEVICEID=$(cat -v /opt/vmware/iotc-agent/data/data/deviceIds.data | awk -F '^' '{print $2}' | awk -F '@' '{print $2}')
+        printl "Thing device is enrolled sucessfully."
+        printl "Thing ID is: $TNGDEVICEID"
+    else
+        printl "Thing device is NOT enrolled sucessfully."
+    fi
+
+    ## Cleanup variables
+    GWDEVICEID=""
+    TTMPLNAME=""
+    TNGNAME=""
+    TNGDEVICEID=""
+}
+
+if [[ $MYMENU == *"ENROLL_THING"* ]]; then
+    moduleEnrollThing
+fi
+
+################################################################################
+# Unenroll a Thing Device from the Gateway Device.
+################################################################################
+
+## Module Functions
+
+## Module Logic
+moduleThingUnenroll() {
+    printstatus "Unenrolling a THING from the Gateway..."
+
+    ## Check if agent is installed.
+    if [ ! -f /opt/vmware/iotc-agent/bin/DefaultClient ]; then 
+        printf "${BIRed}Pulse agent is not installed - aborting${BIWhite}\r\n"; exit
+    fi
+
+    ## Check if Thing Device is enrolled.
+    TNGDEVICEID=$(cat -v /opt/vmware/iotc-agent/data/data/deviceIds.data | awk -F '^' '{print $2}' | awk -F '@' '{print $2}')
+    if [[ $GWDEVICEID == "" ]]; then
+        printf "${BIRed}Gateway is not enrolled yet - aborting${BIWhite}\r\n"; exit
+    fi
+
+    ## Unenroll the Thing Device.
+    /opt/vmware/iotc-agent/bin/DefaultClient unenroll --device-id=$TNGDEVICEID
+
+    ## Check and log success.
+    if [ $? -eq 0 ]; then
+        printl "Thing device unenrolled sucessfully."
+    else
+        printl "Thing device is NOT unenrolled sucessfully."
+    fi
+
+    ## Cleanup variables
+    TNGDEVICEID=""
+}
+
+if [[ $MYMENU == *"THING_UNENROLL"* ]]; then
+    moduleThingUnenroll
+fi
+
+################################################################################
+# Unenroll a Gateway Device from Pulse.
+################################################################################
+
+## Module Functions
+
+## Module Logic
+moduleGatewayUnenroll() {
+    printstatus "Unenrolling a GATEWAY from Pulse..."
+
+    ## Check if agent is installed.
+    if [ ! -f /opt/vmware/iotc-agent/bin/DefaultClient ]; then 
+        printf "${BIRed}Pulse agent is not installed - aborting${BIWhite}\r\n"; exit
+    fi
+
+    ## Check if Thing Device is enrolled.
+    GWDEVICEID=$(cat -v /opt/vmware/iotc-agent/data/data/deviceIds.data | awk -F '^' '{print $1}' | awk -F '@' '{print $1}')
+    if [[ $GWDEVICEID == "" ]]; then
+        printf "${BIRed}Gateway is not enrolled - aborting${BIWhite}\r\n"; exit
+    fi
+
+    ## Unenroll the Thing Device.
+    /opt/vmware/iotc-agent/bin/DefaultClient unenroll --device-id=$GWDEVICEID
+
+    ## Check and log success.
+    if [ $? -eq 0 ]; then
+        printl "Gateway device unenrolled sucessfully."
+    else
+        printl "Gateway device is NOT unenrolled sucessfully."
+    fi
+
+    ## Cleanup variables
+    GWDEVICEID=""
+}
+
+if [[ $MYMENU == *"GATEWAY_UNENROLL"* ]]; then
+    moduleGatewayUnenroll
+fi
+
+################################################################################
+# Uninstall the agent from the Gateway Device.
+################################################################################
+
+## Module Functions
+
+## Module Logic
+moduleAgentUninstall() {
+    printstatus "Uninstalling the Pulse Agent from the gateway..."
+    /opt/vmware/iotc-agent/uninstall.sh
+    if [ $? -eq 0 ]; then
+        printl "Pulse Agent uninstalled sucessfully."
+    else
+        printl "Pulse Agent is NOT uninstalled sucessfully."
+    fi
+}
+
+if [[ $MYMENU == *"AGENT_UNINSTALL"* ]]; then
+    moduleAgentUninstall
+fi
+
+################################################################################
+# Download the Pulse package-cli onto the host.
+################################################################################
+
+## Module Functions
+
+## Module Logic
+modulePackageCli() {
+
+    if [[ $CPUARCH == *"armv7l"* ]];then
+        whiptail --title "Sorry, not available" --msgbox "Sorry, there is no package-cli for the $CPUARCH architecture available. You must hit OK to continue." 8 78
+        printstatus "Sorry, there is no package-cli for the $CPUARCH architecture available"
+        break
+    fi
+
+    printstatus "Download the package-cli to the Gateway..."
+    ## Make sure unzip is installed.
+    $PCKMGR $AQUIET $PCK_INST unzip 2>&1 | tee -a $LOGFILE
+
+    ## Gather all information for downloading file.
+    PULSEINSTANCE=$(whiptail --inputbox "\nEnter your Pulse Console Instance (for example iotc001,iotc002, etc.):\n" --title "Installation Package-CLI" 8 60 $PULSEINSTANCE 3>&1 1>&2 2>&3)
+    PULSEADDENDUM="-pulse.vmware.com"
+    PULSEHOST="$PULSEINSTANCE$PULSEADDENDUM"
+    CLIPACKAGE="/api/iotc-cli/package-cli.zip"
+    PULSECLIURL="https://$PULSEHOST$CLIPACKAGE"
+
+    ## Downloading the package-cli bundle.
+    curl -o $WORKDIR/package-cli.zip $PULSECLIURL 2>&1 | tee -a $LOGFILE
+
+    ## Unzip only OS-bit specific package-cli
+    if [[ $CPUARCH == *"x86_64"* ]];then
+        unzip -j ~/package-cli.zip linux_amd64/package-cli -d /usr/bin
+        printl "package-cli for the $CPUARCH architecture is put in the $WORKDIR/bin folder"
+    elif [[ $CPUARCH == *"i686"* ]];then
+        unzip -j ~/package-cli.zip darwin_386/package-cli -d /usr/bin
+        printl "package-cli for the $CPUARCH architecture is put in the $WORKDIR/bin folder"
+    else
+        printl "By the look of it, not one of the supported CPU Architectures."
+    break
+    fi
+
+    ## Make package-cli systemwide accessible.
+    ln -s $WORKDIR/bin/package-cli /usr/bin/package-cli
+
+    ## Cleanup variables
+    PULSEINSTANCE=""
+    PULSEADDENDUM=""
+    PULSEHOST=""
+    CLIPACKAGE=""
+    PULSECLIURL=""
+}
+
+if [[ $MYMENU == *"PACKAGE_CLI"* ]]; then
+    modulePackageCli
 fi
 
 ################################################################################
