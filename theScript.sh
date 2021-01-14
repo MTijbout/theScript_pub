@@ -5,7 +5,7 @@
 # Date last update: 27/aug/20
 # Author: Marco Tijbout
 #
-# Version 0.9o
+# Version 0.9p
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -26,6 +26,11 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 0.9p Marco Tijbout:
+#   Updated how variables are cleared with unset
+#   Updated the aliases
+#   Fix ownership of log file
+#   Introduce functionality based on architecture
 # 0.9o Marco Tijbout:
 #   Fixed IP addressing for CentOS
 #   LOCAL_MIRROR: New module to add the local (NL) mirror to apt
@@ -84,7 +89,7 @@
 ################################################################################
 
 ## Version of theScript.sh
-SCRIPT_VERSION="0.9o"
+SCRIPT_VERSION="0.9p"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -102,7 +107,9 @@ DATETIME=`date +%Y%m%d_%H%M`
 
 SCRIPT_NAME=`basename "$0"`
 ## Log file definition
-LOGFILE=$WORKDIR/$SCRIPT_NAME-${DATETIME}.log
+LOGFILE=${WORKDIR}/${SCRIPT_NAME}-${DATETIME}.log
+touch $LOGFILE
+chown $USERID:$USERID $LOGFILE
 
 ## Logging and ECHO functionality combined.
 printl() {
@@ -125,6 +132,10 @@ fi
 . /etc/os-release
 OPSYS=${ID^^}
 # printl "OPSYS: $OPSYS"
+
+## Get System Architecture
+SYSARCH=$(uname -m)
+SYSARCH=${SYSARCH^^}
 
 ## If the OS is exotic, exit.
 if  [[ $OPSYS != *"ARCH"* ]] && \
@@ -431,7 +442,7 @@ moduleIPFix() {
     REBOOTREQUIRED=0
 
     ## Cleanup variables
-    SUPPORTED_OS=""
+    unset SUPPORTED_OS
 }
 
 if [[ $MYMENU == *"IP_FIX"* ]]; then
@@ -500,7 +511,7 @@ EOF
     REBOOTREQUIRED=1
 
     ## Cleanup variables
-    NEWVALUE=""
+    unset NEWVALUE
 fi
 
 ################################################################################
@@ -565,15 +576,15 @@ moduleCreateSysadmin() {
     printstatus "The account $ADMINNAME is created..."
 
     ## Cleanup variables
-    USERPASS=""
-    USERPASS2=""
-    ADMINNAME=""
-    SRC=""
-    DEST=""
-    SRC_GROUPS=""
-    SRC_SHELL=""
-    NEW_GROUPS=""
-    gr=""
+    unset USERPASS
+    unset USERPASS2
+    unset ADMINNAME
+    unset SRC
+    unset DEST
+    unset SRC_GROUPS
+    unset SRC_SHELL
+    unset NEW_GROUPS
+    unset gr
     fi
 }
 
@@ -600,7 +611,8 @@ moduleUpdateHost() {
         $PCKMGR -Syu 2>&1 | tee -a $LOGFILE
     else
         $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET -y upgrade 2>&1 | tee -a $LOGFILE
+        $PCKMGR $AQUIET list --upgradable 2>&1 | tee -a $LOGFILE
+        $PCKMGR $AQUIET -y full-upgrade 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET -y dist-upgrade 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET -y autoremove 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET -y autoclean 2>&1 | tee -a $LOGFILE
@@ -681,7 +693,7 @@ moduleShowIp() {
         rm worker_file 2>&1 | tee -a $LOGFILE
 
         ## Cleanup variables
-        TARGETFILE=""
+        unset TARGETFILE
     fi
 }
 if [[ $MYMENU == *"SHOW_IP"* ]]; then
@@ -740,12 +752,12 @@ moduleHostRename() {
     REBOOTREQUIRED=1
 
     ## Cleanup variables
-    RDM=""
-    MAC=""
-    OLDHOSTNAME=""
-    GENHOSTNAME=""
-    NEWHOSTNAME=""
-    cloudFile=""
+    unset RDM
+    unset MAC
+    unset OLDHOSTNAME
+    unset GENHOSTNAME
+    unset NEWHOSTNAME
+    unset cloudFile
 }
 
 if [[ $MYMENU == *"HOST_RENAME"* ]]; then
@@ -785,8 +797,8 @@ moduleCustomPrompt () {
         echo "$NEWPROMPT" >> $TARGETFILE
     fi
     ## Cleanup variables
-    TARGETFILE=""
-    NEWPROMPT=""
+    unset TARGETFILE
+    unset NEWPROMPT
 }
 
 if [[ $MYMENU == *"CUSTOM_PROMPT"* ]]; then
@@ -826,8 +838,8 @@ EOF
         rm $WORKFILE3
     fi
     ## Cleanup variables
-    TARGETFILE=""
-    WORKFILE3=""
+    unset TARGETFILE
+    unset WORKFILE3
 }
 
 if [[ $MYMENU == *"ADD_CSCRIPT"* ]]; then
@@ -859,9 +871,9 @@ moduleLocalMirror () {
     fi
 
     ## Cleanup variables
-    TARGETFILE=""
-    PATTERN_IN=""
-    PATTERN_OUT=""
+    unset TARGETFILE
+    unset PATTERN_IN
+    unset PATTERN_OUT
 }
 
 if [[ $MYMENU == *"LOCAL_MIRROR"* ]]; then
@@ -928,13 +940,15 @@ alias bashrc="nano ~/.bashrc && source ~/.bashrc"
 alias bash_aliases="nano ~/.bash_aliases && source ~/.bash_aliases"
 alias nocomment="grep -Ev '^(#|$)'"
 alias catnc="grep -Ev '^(#|$)'"
-alias update='sudo apt update && sudo apt upgrade -y && sudo apt autoremove && sudo apt autoclean'
+alias monit='sudo tail -f /var/log/daemon.log'
+alias div='echo -e "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n$
+alias update='sudo apt update && div && sudo apt list --upgradable && div && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo$
 EOF
     fi
     chown ${USERID}:${USERID} $TARGETFILE
     ## Cleanup variables
-    TARGETFILE=""
-    WORKFILE2=""
+    unset TARGETFILE
+    unset WORKFILE2
 }
 
 if [[ $MYMENU == *"CUSTOM_ALIAS"* ]]; then
@@ -1195,22 +1209,22 @@ modulePulseAgent() {
         doPulseAgentInstall
     fi
 
-## Cleanup variables
-PLSAGTDLFLD=""
-PLSAGTVERSION=""
-PULSEINSTANCE=""
-PULSEADDENDUM=""
-PULSEHOST=""
-PULSEPORT=""
-TIMEOUT=""
-PULSEAGENTX86=""
-PULSEAGENTARM=""
-PULSEAGENTARM64=""
-PULSEURLX86=""
-PULSEURLARM=""
-PULSEURLARM64=""
-PLSAGTREINSTALL=""
-PLSAGTINSTALLED=""
+    ## Cleanup variables
+    unset PLSAGTDLFLD
+    unset PLSAGTVERSION
+    unset PULSEINSTANCE
+    unset PULSEADDENDUM
+    unset PULSEHOST
+    unset PULSEPORT
+    unset TIMEOUT
+    unset PULSEAGENTX86
+    unset PULSEAGENTARM
+    unset PULSEAGENTARM64
+    unset PULSEURLX86
+    unset PULSEURLARM
+    unset PULSEURLARM64
+    unset PLSAGTREINSTALL
+    unset PLSAGTINSTALLED
 
 printl "  - Pulse Agent: Nothing more to do. Exiting this part."
 printl ""
@@ -1267,12 +1281,12 @@ moduleEnrollGateway() {
     rm -f $TMPPWFILE
 
     ## Cleanup variables
-    OLDNAME=""
-    TMPLNAME=""
-    GWNAME=""
-    GWADMIN=""
-    USERPASS=""
-    TMPPWFILE=""
+    unset OLDNAME
+    unset TMPLNAME
+    unset GWNAME
+    unset GWADMIN
+    unset USERPASS
+    unset TMPPWFILE
 }
 
 if [[ $MYMENU == *"ENROLL_GATEWAY"* ]]; then
@@ -1319,10 +1333,10 @@ moduleEnrollThing() {
     fi
 
     ## Cleanup variables
-    GWDEVICEID=""
-    TTMPLNAME=""
-    TNGNAME=""
-    TNGDEVICEID=""
+    unset GWDEVICEID
+    unset TTMPLNAME
+    unset TNGNAME
+    unset TNGDEVICEID
 }
 
 if [[ $MYMENU == *"ENROLL_THING"* ]]; then
@@ -1361,7 +1375,7 @@ moduleThingUnenroll() {
     fi
 
     ## Cleanup variables
-    TNGDEVICEID=""
+    unset TNGDEVICEID
 }
 
 if [[ $MYMENU == *"THING_UNENROLL"* ]]; then
@@ -1400,7 +1414,7 @@ moduleGatewayUnenroll() {
     fi
 
     ## Cleanup variables
-    GWDEVICEID=""
+    unset GWDEVICEID
 }
 
 if [[ $MYMENU == *"GATEWAY_UNENROLL"* ]]; then
@@ -1473,11 +1487,11 @@ modulePackageCli() {
     ln -s $WORKDIR/bin/package-cli /usr/bin/package-cli
 
     ## Cleanup variables
-    PULSEINSTANCE=""
-    PULSEADDENDUM=""
-    PULSEHOST=""
-    CLIPACKAGE=""
-    PULSECLIURL=""
+    unset PULSEINSTANCE
+    unset PULSEADDENDUM
+    unset PULSEHOST
+    unset CLIPACKAGE
+    unset PULSECLIURL
 }
 
 if [[ $MYMENU == *"PACKAGE_CLI"* ]]; then
@@ -1626,11 +1640,11 @@ moduleLog2RAM() {
     fi
 
     ## Cleanup variables
-    L2RDEFVAL=""
-    MODULE_NAME=""
-    Log2RAM_INSTALLED=""
-    Log2RAM_OS_CHECK=""
-    GIT_INSTALL_SUCCES=""
+    unset L2RDEFVAL
+    unset MODULE_NAME
+    unset Log2RAM_INSTALLED
+    unset Log2RAM_OS_CHECK
+    unset GIT_INSTALL_SUCCES
 }
 
 if [[ $MYMENU == *"log2ram"* ]]; then
@@ -1746,15 +1760,15 @@ macDHCP() {
     fi
 
     ## Cleanup variables
-    CONF_FILE=""
-    MODULE_NAME=""
-    CONF_STRING_1=""
-    CONF_STRING_2=""
-    macDHCP_INSTALLED=""
-    MACDHCP_OS_CHECK=""
-    MACDHCP_CONF=""
-    CONF_CHANGE_SUCCES=""
-    MACDHCP_CONFILE_INST=""
+    unset CONF_FILE
+    unset MODULE_NAME
+    unset CONF_STRING_1
+    unset CONF_STRING_2
+    unset macDHCP_INSTALLED
+    unset MACDHCP_OS_CHECK
+    unset MACDHCP_CONF
+    unset CONF_CHANGE_SUCCES
+    unset MACDHCP_CONFILE_INST
 }
 
 if [[ $MYMENU == *"MACDHCP"* ]]; then
