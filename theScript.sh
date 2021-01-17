@@ -5,7 +5,7 @@
 # Date last update: 27/aug/20
 # Author: Marco Tijbout
 #
-# Version 0.9p
+# Version 0.9q
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -89,7 +89,7 @@
 ################################################################################
 
 ## Version of theScript.sh
-SCRIPT_VERSION="0.9p"
+SCRIPT_VERSION="0.9q"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -317,8 +317,8 @@ sub_menu1() {
         "ADD_CSCRIPT" "Add cscript to .bashrc " OFF \
         "LOCAL_MIRROR" "Add local mirror for APT " OFF \
         "CUSTOM_ALIAS" "Aliases for ease of use " OFF \
+        "VIMRC" "Fill .vimrc with settings" OFF \
         "CHANGE_LANG" "Change Language to US-English " OFF \
-        "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
         3>&1 1>&2 2>&3)
 printl "Output SubMenu1: $SMENU1"
 MYMENU="$MYMENU $SMENU1"
@@ -329,6 +329,7 @@ sub_menu2() {
         "\nSelect items as required then hit OK " 25 75 16 \
         "CREATE_SYSADMIN" "Create alternative sysadmin account " OFF \
         "UPDATE_HOST" "Apply latest updates available " OFF \
+        "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
         "REGENERATE_SSH_KEYS" "Regenerate the SSH host keys " OFF \
         "HOST_RENAME" "Rename the HOST " OFF \
         3>&1 1>&2 2>&3)
@@ -953,6 +954,29 @@ EOF
 
 if [[ $MYMENU == *"CUSTOM_ALIAS"* ]]; then
     moduleCustomAlias
+fi
+
+################################################################################
+# Fill .vimrc with settings
+################################################################################
+
+## Module Functions
+
+## Module Logic
+moduleVimrc() {
+    printstatus "Fill .vimrc with settings ..."
+
+    TARGETFILE="$WORKDIR/.vimrc"
+    cat > $TARGETFILE << EOF
+set list
+set number
+syntax on
+colorscheme desert
+EOF
+}
+
+if [[ $MYMENU == *"VIMRC"* ]]; then
+    moduleVimrc
 fi
 
 ################################################################################
