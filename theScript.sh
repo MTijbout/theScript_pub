@@ -2,7 +2,7 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 27/apr/19
-# Date last update: 27/aug/20
+# Date last update: 24/jan/21
 # Author: Marco Tijbout
 #
 # Version 0.9q
@@ -26,6 +26,8 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 0.9q Marco Tijbout:
+#   Updated CUSTOM_ALIAS with new update command incl reboot notification.
 # 0.9p Marco Tijbout:
 #   Updated how variables are cleared with unset
 #   Updated the aliases
@@ -943,7 +945,7 @@ alias nocomment="grep -Ev '^(#|$)'"
 alias catnc="grep -Ev '^(#|$)'"
 alias monit='sudo tail -f /var/log/daemon.log'
 alias div='echo -e "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"'
-alias update='sudo apt update && div && sudo apt list --upgradable && div && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt autoclean -y'
+alias update='sudo apt update && div && sudo apt list --upgradable && div && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt autoclean -y && div && [ -f /var/run/reboot-required ] && echo -e "- Reboot is required ..." || echo -e "- No reboot required ..."'
 alias fix127='sudo mv /var/lib/dpkg/info/install-info.postinst /var/lib/dpkg/info/install-info.postinst.bad'
 EOF
     fi
