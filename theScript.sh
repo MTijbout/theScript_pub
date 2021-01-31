@@ -27,7 +27,9 @@
 #
 # Version history:
 # 0.9q Marco Tijbout:
-#   Updated CUSTOM_ALIAS with new update command incl reboot notification.
+#   Updated CUSTOM_ALIAS
+#       - with new update command incl reboot notification
+#       - alias to run the script from online
 # 0.9p Marco Tijbout:
 #   Updated how variables are cleared with unset
 #   Updated the aliases
@@ -947,6 +949,7 @@ alias monit='sudo tail -f /var/log/daemon.log'
 alias div='echo -e "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"'
 alias update='sudo apt update && div && sudo apt list --upgradable && div && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt autoclean -y && div && [ -f /var/run/reboot-required ] && echo -e "- Reboot is required ..." || echo -e "- No reboot required ..."'
 alias fix127='sudo mv /var/lib/dpkg/info/install-info.postinst /var/lib/dpkg/info/install-info.postinst.bad'
+alias thescript='curl -s https://raw.githubusercontent.com/MTijbout/theScript_pub/master/theScript.sh | sudo bash'
 EOF
     fi
     chown ${USERID}:${USERID} $TARGETFILE
