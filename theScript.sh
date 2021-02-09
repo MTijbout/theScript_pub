@@ -910,6 +910,33 @@ fi
 ################################################################################
 
 ## Module Functions
+fnFindStringInFile() {
+    if grep -Fxq "${PATTERN_OUT}" "${TARGETFILE}"
+    then
+        # code if found
+        printl "- Target pattern found. Nothing else to do ..."
+    elif grep -Fxq "${PATTERN_IN}" "${TARGETFILE}"
+        # code if not found
+        printl "- Search pattern found. Replace with new one ..."
+        fnDoReplace
+    else
+        printl "- No matches for search and target pattern."
+        printl "- Maybe and error in this stript."
+    fi
+}
+
+fnDoReplace() {
+    # Make backup first ...
+    fnMakeBackup ${TARGETFILE}
+
+    ## Search for input pattern and replace by output pattern
+    printl "Make changes to ${TARGETFILE} ..."
+    printl "New mirror: ${PATTERN_OUT}"
+    sed -i 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+    EXITCODE=$?; fnSucces $EXITCODE
+    #return
+
+}
 
 ## Module Logic
 moduleLocalMirror () {
@@ -923,15 +950,8 @@ moduleLocalMirror () {
         PATTERN_IN="http://raspbian.raspberrypi.org/raspbian/"
         PATTERN_OUT="http://mirror.nl.leaseweb.net/raspbian/raspbian"
 
-        # Make backup first ...
-        fnMakeBackup ${TARGETFILE}
-
-        ## Search for input pattern and replace by output pattern
-        printl "Make changes to ${TARGETFILE} ..."
-        printl "New mirror: ${PATTERN_OUT}"
-        sed -i 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
-        EXITCODE=$?; fnSucces $EXITCODE
-        #return
+        # Check if already has the configuration
+        fnFindStringInFile
 
     elif  [[ $OPSYS == *"UBUNTU"* ]] && [[ $SYSARCH == *"AARCH64"* ]]; then
         printl "Ubuntu on ARM64 detected..."
@@ -941,15 +961,8 @@ moduleLocalMirror () {
         PATTERN_IN="http://ports.ubuntu.com/ubuntu-ports"
         PATTERN_OUT="http://ftp.tu-chemnitz.de/pub/linux/ubuntu-ports"
 
-        # Make backup first ...
-        fnMakeBackup ${TARGETFILE}
-
-        ## Search for input pattern and replace by output pattern
-        printl "Make changes to ${TARGETFILE} ..."
-        printl "New mirror: ${PATTERN_OUT}"
-        sed -i 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
-        EXITCODE=$?; fnSucces $EXITCODE
-        #return
+        # Check if already has the configuration
+        fnFindStringInFile
 
     else
         printl "Nothing changed. No options available yet for this OS and hardware combination."
