@@ -252,7 +252,7 @@ testInternetConnection() {
 # Function to display success or failure of command
 fnSucces() {
     if [ $EXITCODE -eq 0 ]; then
-        printl "  - Succesful.\n"
+        printl "  - Succesful."
     else
         printl "  - Failed!"
         # Consider exiting.
@@ -929,8 +929,6 @@ fi
 
 ## Module Functions
 
-
-#12345
 ## Module Logic
 moduleLocalMirror () {
     printstatus "Change the apt mirror to a local one..."
@@ -947,7 +945,9 @@ moduleLocalMirror () {
         fnMakeBackup ${TARGETFILE}
 
         ## Search for input pattern and replace by output pattern
-        sed -i.bak-${DATETIME} 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+        printl "Make changes to ${TARGETFILE} ..."
+        printl "New mirror: ${PATTERN_OUT}"
+        sed -i 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
         EXITCODE=$?; fnSucces $EXITCODE
         #return
 
@@ -963,7 +963,9 @@ moduleLocalMirror () {
         fnMakeBackup ${TARGETFILE}
 
         ## Search for input pattern and replace by output pattern
-        sed -i.bak-${DATETIME} 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+        printl "Make changes to ${TARGETFILE} ..."
+        printl "New mirror: ${PATTERN_OUT}"
+        sed -i 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
         EXITCODE=$?; fnSucces $EXITCODE
         #return
 
