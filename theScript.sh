@@ -934,8 +934,6 @@ fnDoReplace() {
     printl "New mirror: ${PATTERN_OUT}"
     sed -i 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
     EXITCODE=$?; fnSucces $EXITCODE
-    #return
-
 }
 
 ## Module Logic
