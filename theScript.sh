@@ -914,11 +914,13 @@ fnFindStringInFile() {
     printl "Pattern out: ${PATTERN_OUT}"
     printl "Pattern in: ${PATTERN_IN}"
     printl "Search in file: ${TARGETFILE}"
-    if grep -Fxq "${PATTERN_OUT}" "${TARGETFILE}"
+    # if grep -Fxq "${PATTERN_OUT}" "${TARGETFILE}"
+    if grep "${PATTERN_OUT}" "${TARGETFILE}"
     then
         # code if found
         printl "- Target pattern found. Nothing else to do ..."
-    elif grep -Fxq "${PATTERN_IN}" "${TARGETFILE}"
+    # elif grep -Fxq "${PATTERN_IN}" "${TARGETFILE}"
+    elif grep "${PATTERN_IN}" "${TARGETFILE}"
     then
         # code if not found
         printl "- Search pattern found. Replace with new one ..."
