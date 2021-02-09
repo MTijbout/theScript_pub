@@ -2,10 +2,10 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 27/apr/19
-# Date last update: 24/jan/21
+# Date last update: 2021-01-31
 # Author: Marco Tijbout
 #
-# Version 0.9q
+# Version 0.9r
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -26,6 +26,8 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 0.9r Marco Tijbout:
+#   LOCAL_MIRROR Added support for Ubuntu on RPi
 # 0.9q Marco Tijbout:
 #   Updated CUSTOM_ALIAS
 #       - with new update command incl reboot notification
@@ -93,7 +95,7 @@
 ################################################################################
 
 ## Version of theScript.sh
-SCRIPT_VERSION="0.9q"
+SCRIPT_VERSION="0.9r"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -238,13 +240,32 @@ printstatus() {
     printl ""
 }
 
-testInternetConnection() {
 ## Test internet connection.
+testInternetConnection() {
     chmod u+s /bin/ping
     if [[ "$(ping -c 1 23.1.68.60  | grep '100%' )" != "" ]]; then
         printl "${IRed} No internet connection available, aborting! ${IWhite}\r\n"
         exit 0
     fi
+}
+
+# Function to display success or failure of command
+fnSucces() {
+    if [ $EXITCODE -eq 0 ]; then
+        printl "  - Succesful.\n"
+    else
+        printl "  - Failed!"
+        # Consider exiting.
+        printl "  - Exitcode: $EXITCODE"
+        # exit $EXITCODE
+    fi
+}
+
+# Function to make backups of files
+fnMakeBackup() {
+    printl "- Make backup of $1"
+    sudo cp "${1}" "${1}".bak-${DATETIME}
+    EXITCODE=$?; fnSucces $EXITCODE
 }
 
 ################################################################################
@@ -323,6 +344,7 @@ sub_menu1() {
         "CUSTOM_ALIAS" "Aliases for ease of use " OFF \
         "VIMRC" "Fill .vimrc with settings" OFF \
         "CHANGE_LANG" "Change Language to US-English " OFF \
+        "RPI_CLONE" "Install RPI-Clone" OFF \
         3>&1 1>&2 2>&3)
 printl "Output SubMenu1: $SMENU1"
 MYMENU="$MYMENU $SMENU1"
@@ -518,6 +540,56 @@ EOF
     ## Cleanup variables
     unset NEWVALUE
 fi
+
+################################################################################
+# Installing RPI-Clone
+################################################################################
+
+## Module Functions
+fnGitCheck() {
+    ## Check if git is installed.
+    printl "  - $MODULE_NAME: Check if git is already installed."
+    which git
+    if [ $? -eq 0 ]; then
+        printl "    - $MODULE_NAME: git is installed."
+        GIT_INSTALLED="true"
+    else
+        printl "    - $MODULE_NAME: git is not installed. Install."
+        GIT_INSTALLED="false"
+        $PCKMGR $AQUIET $PCK_INST git 2>&1 | tee -a $LOGFILE
+        ## Check and log success.
+        if [ $? -eq 0 ]; then
+            printl "    - $MODULE_NAME: git installed sucessfully."
+            GIT_INSTALL_SUCCES="true"
+        else 
+            printl "    - $MODULE_NAME: git did not install sucessfully."
+            GIT_INSTALL_SUCCES="false"
+            return ## Exit function on failure.
+        fi
+    fi
+}
+
+
+## Module Logic
+
+moduleInstallRpiclone() {
+    # check for git
+    fnGitCheck
+
+    printl "  - Clone repo"
+    git clone https://github.com/billw2/rpi-clone.git
+
+    printl "  - Enter repo"
+    cd rpi-clone
+
+}
+
+MODULE_NAME=RPI_CLONE
+if [[ $MYMENU == *"RPI_CLONE"* ]]; then
+    moduleInstallRpiclone
+fi
+
+unset MODULE_NAME
 
 ################################################################################
 # Creating a system administrator account.
@@ -857,22 +929,46 @@ fi
 
 ## Module Functions
 
+
+#12345
 ## Module Logic
 moduleLocalMirror () {
     printstatus "Change the apt mirror to a local one..."
 
     ## Check if this is Raspbian
-    if [[ $OPSYS != *"RASPBIAN"* ]]; then
-        printl "Wrong OS to configure mirror for..."
-        return
-    else
+    if [[ $OPSYS == *"RASPBIAN"* ]]; then
+        printl "Raspberry Pi OS detected..."
         ## Prepare settings as variables
         TARGETFILE="/etc/apt/sources.list"
         PATTERN_IN="http://raspbian.raspberrypi.org/raspbian/"
         PATTERN_OUT="http://mirror.nl.leaseweb.net/raspbian/raspbian"
 
+        # Make backup first ...
+        fnMakeBackup ${TARGETFILE}
+
         ## Search for input pattern and replace by output pattern
         sed -i.bak-${DATETIME} 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+        EXITCODE=$?; fnSucces $EXITCODE
+        #return
+
+    elif  [[ $OPSYS == *"UBUNTU"* ]] && [[ $SYSARCH == *"AARCH64"* ]]; then
+        printl "Ubuntu on ARM64 detected..."
+
+        ## Prepare settings as variables
+        TARGETFILE="/etc/apt/sources.list"
+        PATTERN_IN="http://ports.ubuntu.com/ubuntu-ports"
+        PATTERN_OUT="http://ftp.tu-chemnitz.de/pub/linux/ubuntu-ports"
+
+        # Make backup first ...
+        fnMakeBackup ${TARGETFILE}
+
+        ## Search for input pattern and replace by output pattern
+        sed -i.bak-${DATETIME} 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+        EXITCODE=$?; fnSucces $EXITCODE
+        #return
+
+    else
+        printl "Nothing changed. No options available yet for this OS and hardware combination."
     fi
 
     ## Cleanup variables
