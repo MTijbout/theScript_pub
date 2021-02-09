@@ -911,6 +911,9 @@ fi
 
 ## Module Functions
 fnFindStringInFile() {
+    printl "Pattern out: ${PATTERN_OUT}"
+    printl "Pattern in: ${PATTERN_IN}"
+    printl "Search in file: ${TARGETFILE}"
     if grep -Fxq "${PATTERN_OUT}" "${TARGETFILE}"
     then
         # code if found
