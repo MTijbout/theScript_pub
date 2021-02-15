@@ -1301,7 +1301,7 @@ fnMacDHCPEnabled() {
     if grep -Fxq "$CONF_STRING_1a" "${CONF_WORK_FILE}"; then
         printl "    - DHCP is enabled."
         MACDHCP_EN="true"
-    elif grep -Fxq "$CONF_STRING_1v" "${CONF_WORK_FILE}"; then
+    elif grep -Fxq "$CONF_STRING_1b" "${CONF_WORK_FILE}"; then
         printl "    - DHCP is enabled."
         MACDHCP_EN="true"
     else
