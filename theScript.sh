@@ -1298,10 +1298,10 @@ fnMacDHCPCheckFiles() {
 
 fnMacDHCPEnabled() {
     # Check if DHCP is enabled
-    if grep -Fxq "$CONF_STRING_1a" "${CONF_WORK_FILE}"; then
+    if grep -Fxq "${CONF_STRING_1a}" "${CONF_WORK_FILE}"; then
         printl "    - DHCP is enabled."
         MACDHCP_EN="1"
-    elif grep -Fxq "$CONF_STRING_1b" "${CONF_WORK_FILE}"; then
+    elif grep -Fxq "${CONF_STRING_1b}" "${CONF_WORK_FILE}"; then
         printl "    - DHCP is enabled."
         MACDHCP_EN="2"
     else
@@ -1312,10 +1312,10 @@ fnMacDHCPEnabled() {
 
 fnMacDHCPUseMac() {
     # Check if the DHCP is already configured to use mac address.
-    if grep -Fxq "$CONF_STRING_2a" "$CONF_FILE"; then
+    if grep -Fxq "${CONF_STRING_2a}" "${CONF_WORK_FILE}"; then
         printl "    - Using mac address for DHCP is already enabled."
         MACDHCP_CONF="true"
-    elif grep -Fxq "$CONF_STRING_2b" "$CONF_FILE"; then
+    elif grep -Fxq "${CONF_STRING_2b}" "${CONF_WORK_FILE}"; then
         printl "    - Using mac address for DHCP is already enabled."
         MACDHCP_CONF="true"
     else
@@ -1327,7 +1327,7 @@ fnMacDHCPUseMac() {
 fnMacDHCPChangeConfig() {
     # Add the configuration line to the config file
     if [[ ${MACDHCP_EN} = 1 ]]; then
-        sudo sed -i "/${CONF_STRING_1a}/a\\$CONF_STRING_2a" "$CONF_FILE"
+        sudo sed -i "/${CONF_STRING_1a}/a\\${CONF_STRING_2a}" "${CONF_WORK_FILE}"
         ## Check and log success.
         if [ $? -eq 0 ]; then
             printl "    - Configuration succesfully changed."
@@ -1337,7 +1337,7 @@ fnMacDHCPChangeConfig() {
             return ## Exit function on ERROR.
         fi
     elif [[ ${MACDHCP_EN} = 2 ]]; then
-        sudo sed -i "/${CONF_STRING_1b}/a\\$CONF_STRING_2b" "$CONF_FILE"
+        sudo sed -i "/${CONF_STRING_1b}/a\\${CONF_STRING_2b}" "${CONF_WORK_FILE}"
         ## Check and log success.
         if [ $? -eq 0 ]; then
             printl "    - Configuration succesfully changed."
@@ -1347,7 +1347,7 @@ fnMacDHCPChangeConfig() {
             return ## Exit function on ERROR.
         fi
     else
-        printl "    - $MODULE_NAME: ERROR - Size value not found in conf file."
+        printl "    - ${MODULE_NAME}: ERROR - Size value not found in conf file."
     fi
 }
 
