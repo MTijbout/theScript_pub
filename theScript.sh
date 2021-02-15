@@ -1298,14 +1298,16 @@ fnMacDHCPCheckFiles() {
 
 fnMacDHCPEnabled() {
     # Check if DHCP is enabled
-    grep -Fxq "$CONF_STRING_1" "${CONF_WORK_FILE}"
-    if [ $? -eq 0 ]; then
+    if grep -Fxq "$CONF_STRING_1a" "${CONF_WORK_FILE}"; then
+        printl "    - DHCP is enabled."
+        MACDHCP_EN="true"
+    elif grep -Fxq "$CONF_STRING_1v" "${CONF_WORK_FILE}"; then
         printl "    - DHCP is enabled."
         MACDHCP_EN="true"
     else
         printl "    - DHCP is NOT enabled."
         MACDHCP_EN="false"
-    fi
+   fi
 }
 
 fnMacDHCPUseMac() {
@@ -1358,7 +1360,8 @@ fnMacDHCP() {
     [[ ${MACDHCP_CONFILE_INST} = false ]] && return
 
     # Strings of settings
-    CONF_STRING_1='            dhcp4: true'
+    CONF_STRING_1a='            dhcp4: true'
+    CONF_STRING_1b='            dhcp4: yes'
     CONF_STRING_2='            dhcp-identifier: mac'
 
     # Check if DHCP is enabled
