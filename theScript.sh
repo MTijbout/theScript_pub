@@ -1262,15 +1262,15 @@ fi
 ## Module Functions
 fnMacDHCPOSCheck() {
     ## Check if the required OS is supported.
-    printl "  - $MODULE_NAME: Check OS is supported."
+    printl "  - Check if OS is supported:"
     if [[ $OPSYS == *"UBUNTU"* ]]; then
-        printl "    - Detected OS is $OPSYS."
+        printl "    - Supported. Detected OS is $OPSYS."
         MACDHCP_OS_CHECK="true"
     elif [[ $OPSYS == *"RASPBIAN"* ]]; then
-        printl "    - Detected OS is $OPSYS."
+        printl "    - Supported. Detected OS is $OPSYS."
         MACDHCP_OS_CHECK="true"
     elif [[ $OPSYS == *"DEBIAN"* ]]; then
-        printl "    - Detected OS is $OPSYS."
+        printl "    - Supported. Detected OS is $OPSYS."
         MACDHCP_OS_CHECK="true"
     else
         printl "    - Unsupported OS: $OPSYS."
@@ -1279,6 +1279,9 @@ fnMacDHCPOSCheck() {
 }
 
 fnMacDHCPCheckFiles() {
+    printl "  - Check what config files are used:"
+
+    # Define variables
     CONF_FILE_LOC="/etc/netplan"
     CONF_FILE_1="01-netcfg.yaml"
     CONF_FILE_2="50-cloud-init.yaml"
@@ -1299,7 +1302,7 @@ fnMacDHCPCheckFiles() {
 }
 
 fnMacDHCPEnabled() {
-    # Check if DHCP is enabled
+    printl "  - Check if DHCP is enabled:"
     if grep -Fxq "${CONF_STRING_1a}" "${CONF_WORK_FILE}"; then
         printl "    - DHCP is enabled."
         MACDHCP_EN="1"
@@ -1313,7 +1316,7 @@ fnMacDHCPEnabled() {
 }
 
 fnMacDHCPUseMac() {
-    # Check if the DHCP is already configured to use mac address.
+    printl "  - Check if the DHCP is already configured to use mac address:"
     if grep -Fxq "${CONF_STRING_2a}" "${CONF_WORK_FILE}"; then
         printl "    - Using mac address for DHCP is already enabled."
         MACDHCP_CONF="true"
@@ -1328,6 +1331,7 @@ fnMacDHCPUseMac() {
 
 fnMacDHCPChangeConfig() {
     # Add the configuration line to the config file
+    printl "  - Make changes to configuration:"
     if [[ ${MACDHCP_EN} = 1 ]]; then
         sudo sed -i "/${CONF_STRING_1a}/a\\${CONF_STRING_2a}" "${CONF_WORK_FILE}"
         ## Check and log success.
@@ -1388,8 +1392,10 @@ fnMacDHCP() {
     ## Cleanup variables
     unset CONF_FILE
     unset MODULE_NAME
-    unset CONF_STRING_1
-    unset CONF_STRING_2
+    unset CONF_STRING_1a
+    unset CONF_STRING_2a
+    unset CONF_STRING_1b
+    unset CONF_STRING_2b
     unset MACDHCP_OS_CHECK
     unset MACDHCP_CONFILE_INST
     unset MACDHCP_EN
@@ -1422,7 +1428,7 @@ if [[ $REBOOTREQUIRED == *"1"* ]]; then
     else
         whiptail --title "Script Finished" --msgbox "Changes made require a REBOOT.\nPlease reboot ASAP." 8 78
         echo ""
-        printl "Script is Finished. Changes made require a reboot. Pleae REBOOT asap!"
+        printl "Script is Finished. Changes made require a reboot. Please REBOOT asap!"
         echo ""
     fi
 else
