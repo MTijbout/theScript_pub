@@ -1312,8 +1312,10 @@ fnMacDHCPEnabled() {
 
 fnMacDHCPUseMac() {
     # Check if the DHCP is already configured to use mac address.
-    grep -Fxq "$CONF_STRING_2" "$CONF_FILE"
-    if [ $? -eq 0 ]; then
+    if grep -Fxq "$CONF_STRING_2a" "$CONF_FILE"; then
+        printl "    - Using mac address for DHCP is already enabled."
+        MACDHCP_CONF="true"
+    elif grep -Fxq "$CONF_STRING_2b" "$CONF_FILE"; then
         printl "    - Using mac address for DHCP is already enabled."
         MACDHCP_CONF="true"
     else
@@ -1335,7 +1337,7 @@ fnMacDHCPChangeConfig() {
             return ## Exit function on ERROR.
         fi
     elif [[ ${MACDHCP_EN} = 2 ]]; then
-        sudo sed -i "/${CONF_STRING_1a}/a\\$CONF_STRING_2a" "$CONF_FILE"
+        sudo sed -i "/${CONF_STRING_1b}/a\\$CONF_STRING_2b" "$CONF_FILE"
         ## Check and log success.
         if [ $? -eq 0 ]; then
             printl "    - Configuration succesfully changed."
