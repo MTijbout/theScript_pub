@@ -918,7 +918,7 @@ fnFindStringInFile() {
     then
         # code if found
         printl "- Target pattern found. Nothing else to do ..."
-    elif grep -Fxq "${PATTERN_IN}" "${TARGETFILE}"
+    elif grep -Fxq "${PATTERN_IN}" "${TARGETFILE}"; then
         # code if not found
         printl "- Search pattern found. Replace with new one ..."
         fnDoReplace
