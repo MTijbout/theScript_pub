@@ -1351,11 +1351,11 @@ fnMacDHCP() {
 
     # Check for supported OS
     fnMacDHCPOSCheck
-    if [[ ${MACDHCP_OS_CHECK} = false ]] && return
+    [[ ${MACDHCP_OS_CHECK} = false ]] && return
 
     # Check what config file to use
     fnMacDHCPCheckFiles
-    if [[ ${MACDHCP_CONFILE_INST} = false ]] && return
+    [[ ${MACDHCP_CONFILE_INST} = false ]] && return
 
     # Strings of settings
     CONF_STRING_1='            dhcp4: true'
@@ -1363,11 +1363,11 @@ fnMacDHCP() {
 
     # Check if DHCP is enabled
     fnMacDHCPEnabled
-    if [[ ${MACDHCP_EN} = false ]] && return
+    [[ ${MACDHCP_EN} = false ]] && return
 
     # Check if DHCP is already set to use mac address
     fnMacDHCPUseMac
-    if [[ ${MACDHCP_CONF} = true ]] && return
+    [[ ${MACDHCP_CONF} = true ]] && return
 
     # Add configuration to the file
     fnMacDHCPChangeConfig
