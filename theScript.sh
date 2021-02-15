@@ -229,11 +229,11 @@ ACTIVECORES=$(grep -c processor /proc/cpuinfo)
 MY_IP=$(hostname -I)
 
 printstatus() {
-    h=$(($SECONDS/3600));
-    m=$((($SECONDS/60)%60));
-    s=$(($SECONDS%60));
-    printf "\r\n${BIGreen}==\r\n== ${BIYellow}$1"
-    printf "\r\n${BIGreen}== ${IBlue}Total: %02dh:%02dm:%02ds Cores: $ACTIVECORES \r\n${BIGreen}==${IWhite}\r\n\r\n"  $h $m $s;
+    # h=$(($SECONDS/3600));
+    # m=$((($SECONDS/60)%60));
+    # s=$(($SECONDS%60));
+    # printf "\r\n${BIGreen}==\r\n== ${BIYellow}$1"
+    # printf "\r\n${BIGreen}== ${IBlue}Total: %02dh:%02dm:%02ds Cores: $ACTIVECORES \r\n${BIGreen}==${IWhite}\r\n\r\n"  $h $m $s;
     printl ""
     printl "############################################################"
     printl "$1"
