@@ -285,7 +285,7 @@ printstatus "Making sure THE SCRIPT works..."
 REQ_PACKAGES=( whiptail ccze net-tools curl )
 for i in "${REQ_PACKAGES[@]}"
 do
-    which ${i} || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+    sudo dpkg -s ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
 done
 
 ## Photon
