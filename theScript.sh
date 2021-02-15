@@ -280,7 +280,13 @@ printstatus "Making sure THE SCRIPT works..."
 #testInternetConnection
 
 ## Install required software for functional menu.
-$PCKMGR $AQUIET $PCK_INST whiptail ccze net-tools curl 2>&1 | tee -a $LOGFILE
+# $PCKMGR $AQUIET $PCK_INST whiptail ccze net-tools curl 2>&1 | tee -a $LOGFILE
+
+REQ_PACKAGES=( whiptail ccze net-tools curl )
+for i in "${REQ_PACKAGES[@]}"
+do
+    which ${i} || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+done
 
 ## Photon
 # tdnf install rpm-build
