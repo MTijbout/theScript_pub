@@ -268,6 +268,28 @@ fnMakeBackup() {
     EXITCODE=$?; fnSucces $EXITCODE
 }
 
+fnPackageCheck() {
+    printl "  - Check if $1 is installed:"
+    sudo dpkg -s $1 > /dev/null
+    if [ $? -eq 0 ]; then
+        printl "    - Package $1 is installed."
+        PKG_INSTALLED="true"
+    else
+        printl "    - Package $1 is not installed. Install."
+        PKG_INSTALLED="false"
+        $PCKMGR $AQUIET $PCK_INST $1 2>&1 | tee -a $LOGFILE
+        ## Check and log success.
+        if [ $? -eq 0 ]; then
+            printl "    - Package $1 installed sucessfully."
+            PKG_INSTALL_SUCCES="true"
+        else 
+            printl "    - Package $1 did not install sucessfully."
+            PKG_INSTALL_SUCCES="false"
+            return ## Exit function on failure.
+        fi
+    fi
+}
+
 ################################################################################
 ## MAIN SECTION OF SCRIPT
 ################################################################################
@@ -525,50 +547,27 @@ fi
 ################################################################################
 
 ## Module Functions
-fnGitCheck() {
-    ## Check if git is installed.
-    printl "  - $MODULE_NAME: Check if git is already installed."
-    which git
-    if [ $? -eq 0 ]; then
-        printl "    - $MODULE_NAME: git is installed."
-        GIT_INSTALLED="true"
-    else
-        printl "    - $MODULE_NAME: git is not installed. Install."
-        GIT_INSTALLED="false"
-        $PCKMGR $AQUIET $PCK_INST git 2>&1 | tee -a $LOGFILE
-        ## Check and log success.
-        if [ $? -eq 0 ]; then
-            printl "    - $MODULE_NAME: git installed sucessfully."
-            GIT_INSTALL_SUCCES="true"
-        else 
-            printl "    - $MODULE_NAME: git did not install sucessfully."
-            GIT_INSTALL_SUCCES="false"
-            return ## Exit function on failure.
-        fi
-    fi
-}
-
 
 ## Module Logic
 
-moduleInstallRpiclone() {
+fnInstallRpiclone() {
+    printstatus "Installing RPI Clone"
     # check for git
-    fnGitCheck
+    fnPackageCheck git
 
     printl "  - Clone repo"
     git clone https://github.com/billw2/rpi-clone.git
+    EXITCODE=$?; fnSucces $EXITCODE
 
-    printl "  - Enter repo"
-    cd rpi-clone
+    printl "  - Copy binaries to /usr/local/sbin"
+    sudo cp rpi-clone/rpi-clone rpi-clone/rpi-clone-setup /usr/local/sbin
+    EXITCODE=$?; fnSucces $EXITCODE
 
 }
 
-MODULE_NAME=RPI_CLONE
-if [[ $MYMENU == *"RPI_CLONE"* ]]; then
-    moduleInstallRpiclone
-fi
+# Start when module is selected
+[[ $MYMENU == *"RPI_CLONE"* ]] && fnInstallRpiclone
 
-unset MODULE_NAME
 
 ################################################################################
 # Creating a system administrator account.
