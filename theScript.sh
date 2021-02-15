@@ -1264,16 +1264,16 @@ fnMacDHCPOSCheck() {
     ## Check if the required OS is supported.
     printl "  - $MODULE_NAME: Check OS is supported."
     if [[ $OPSYS == *"UBUNTU"* ]]; then
-        printl "    - $MODULE_NAME: OS is $OPSYS."
+        printl "    - Detected OS is $OPSYS."
         MACDHCP_OS_CHECK="true"
     elif [[ $OPSYS == *"RASPBIAN"* ]]; then
-        printl "    - $MODULE_NAME: OS is $OPSYS."
+        printl "    - Detected OS is $OPSYS."
         MACDHCP_OS_CHECK="true"
     elif [[ $OPSYS == *"DEBIAN"* ]]; then
-        printl "    - $MODULE_NAME: OS is $OPSYS."
+        printl "    - Detected OS is $OPSYS."
         MACDHCP_OS_CHECK="true"
     else
-        printl "    - $MODULE_NAME: Incorrect OS: $OPSYS."
+        printl "    - Unsupported OS: $OPSYS."
         MACDHCP_OS_CHECK="false"
     fi
 }
@@ -1285,9 +1285,11 @@ fnMacDHCPCheckFiles() {
 
     if [ -f ${CONF_FILE_LOC}/${CONF_FILE_1} ]; then
         CONF_WORK_FILE=${CONF_FILE_LOC}/${CONF_FILE_1}
+        printl "    - Config file to work with: ${CONF_WORK_FILE}."
         MACDHCP_CONFILE_INST="true"
     elif [ -f ${CONF_FILE_LOC}/${CONF_FILE_2} ]; then
         CONF_WORK_FILE=${CONF_FILE_LOC}/${CONF_FILE_2}
+        printl "    - Config file to work with: ${CONF_WORK_FILE}."
         MACDHCP_CONFILE_INST="true"
     else
         printl "    - Known config files not found. Exit here."
