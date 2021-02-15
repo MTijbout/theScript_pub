@@ -1322,13 +1322,9 @@ fnMacDHCPUseMac() {
     fi
 }
 
-# if grep -Fq "$CONF_STRING_1a" "$CONF_FILE"; then
-#         # Add the line with the new value after the DHCP enabled string.
-    
-
 fnMacDHCPChangeConfig() {
     # Add the configuration line to the config file
-    if [[ ${MACDHCP_OS_CHECK} = 1 ]]; then
+    if [[ ${MACDHCP_EN} = 1 ]]; then
         sudo sed -i "/${CONF_STRING_1a}/a\\$CONF_STRING_2a" "$CONF_FILE"
         ## Check and log success.
         if [ $? -eq 0 ]; then
@@ -1338,7 +1334,7 @@ fnMacDHCPChangeConfig() {
             printl "    - ERROR: No changes made to configuration."
             return ## Exit function on ERROR.
         fi
-    elif [[ ${MACDHCP_OS_CHECK} = 2 ]]; then
+    elif [[ ${MACDHCP_EN} = 2 ]]; then
         sudo sed -i "/${CONF_STRING_1a}/a\\$CONF_STRING_2a" "$CONF_FILE"
         ## Check and log success.
         if [ $? -eq 0 ]; then
