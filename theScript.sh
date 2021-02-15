@@ -160,25 +160,21 @@ fi
 ## Check for OS that uses other update mechanisms.
 if [[ $OPSYS == *"CENTOS"* ]]; then
     PCKMGR="yum"
-    printl "For use with $OPSYS the package manager is set to $PCKMGR"
     PCK_INST="install -y"
     AQUIET="--quiet"
     NQUIET="-s"
     elif [[ $OPSYS == *"PHOTON"* ]]; then
     PCKMGR="tdnf"
-    printl "For use with $OPSYS the package manager is set to $PCKMGR"
     PCK_INST="install -y"
     AQUIET="--quiet"
     NQUIET=""
     elif [[ $OPSYS == *"ARCH"* ]]; then
     PCKMGR="pacman"
-    printl "For use with $OPSYS the package manager is set to $PCKMGR"
     PCK_INST="-S --noconfirm"
     AQUIET=""
     NQUIET=""
 else
     PCKMGR="apt-get"
-    printl "For use with $OPSYS the package manager is set to $PCKMGR"
     PCK_INST="install -y"
     AQUIET="-qq"
     NQUIET="-s"
@@ -306,14 +302,7 @@ CHECK64=$(uname -m)
 printl "DISTRO: $DISTRO"
 printl "CHECK64: $CHECK64"
 printl "OPSYS: $OPSYS"
-
-#if [ ! -f /etc/AlreadyRun ]; then
-#    printl "${BIRed}Script has already run - aborting${BIWhite}\r\n"; exit
-#fi
-
-
-## Create anchor to see if script already run.
-touch /etc/AlreadyRun
+printl ""
 
 ################################################################################
 ## Main Menu Definition
@@ -460,8 +449,6 @@ moduleIPFix() {
 if [[ $MYMENU == *"IP_FIX"* ]]; then
     moduleIPFix
 fi
-
-
 
 ################################################################################
 # Force the system to use en_US as the language.
