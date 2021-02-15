@@ -1300,10 +1300,10 @@ fnMacDHCPEnabled() {
     # Check if DHCP is enabled
     if grep -Fxq "$CONF_STRING_1a" "${CONF_WORK_FILE}"; then
         printl "    - DHCP is enabled."
-        MACDHCP_EN="true"
+        MACDHCP_EN="1"
     elif grep -Fxq "$CONF_STRING_1b" "${CONF_WORK_FILE}"; then
         printl "    - DHCP is enabled."
-        MACDHCP_EN="true"
+        MACDHCP_EN="2"
     else
         printl "    - DHCP is NOT enabled."
         MACDHCP_EN="false"
@@ -1322,23 +1322,32 @@ fnMacDHCPUseMac() {
     fi
 }
 
+# if grep -Fq "$CONF_STRING_1a" "$CONF_FILE"; then
+#         # Add the line with the new value after the DHCP enabled string.
+    
+
 fnMacDHCPChangeConfig() {
     # Add the configuration line to the config file
-    if grep -Fq "$CONF_STRING_1" "$CONF_FILE"; then
-        # Add the line with the new value after the DHCP enabled string.
-        sudo sed -i "/${CONF_STRING_1}/a\\$CONF_STRING_2" "$CONF_FILE"
+    if [[ ${MACDHCP_OS_CHECK} = 1 ]]; then
+        sudo sed -i "/${CONF_STRING_1a}/a\\$CONF_STRING_2a" "$CONF_FILE"
         ## Check and log success.
         if [ $? -eq 0 ]; then
             printl "    - Configuration succesfully changed."
-            CONF_CHANGE_SUCCES="true"
-            #netplan apply
+            REBOOTREQUIRED=1
         else
             printl "    - ERROR: No changes made to configuration."
-            CONF_CHANGE_SUCCES="false"
             return ## Exit function on ERROR.
         fi
-        ## Have the script reboot at the end.
-        REBOOTREQUIRED=1
+    elif [[ ${MACDHCP_OS_CHECK} = 2 ]]; then
+        sudo sed -i "/${CONF_STRING_1a}/a\\$CONF_STRING_2a" "$CONF_FILE"
+        ## Check and log success.
+        if [ $? -eq 0 ]; then
+            printl "    - Configuration succesfully changed."
+            REBOOTREQUIRED=1
+        else
+            printl "    - ERROR: No changes made to configuration."
+            return ## Exit function on ERROR.
+        fi
     else
         printl "    - $MODULE_NAME: ERROR - Size value not found in conf file."
     fi
@@ -1361,8 +1370,9 @@ fnMacDHCP() {
 
     # Strings of settings
     CONF_STRING_1a='            dhcp4: true'
-    CONF_STRING_1b='            dhcp4: yes'
-    CONF_STRING_2='            dhcp-identifier: mac'
+    CONF_STRING_2a='            dhcp-identifier: mac'
+    CONF_STRING_1b='      dhcp4: yes'
+    CONF_STRING_2b='      dhcp-identifier: mac'
 
     # Check if DHCP is enabled
     fnMacDHCPEnabled
