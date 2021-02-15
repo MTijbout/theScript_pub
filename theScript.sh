@@ -5,7 +5,7 @@
 # Date last update: 2021-01-31
 # Author: Marco Tijbout
 #
-# Version 0.9r
+# Version 0.9s
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -26,6 +26,8 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 0.9s Marco Tijbout:
+#   MACDHCP consider more possible configurations for ubuntu
 # 0.9r Marco Tijbout:
 #   LOCAL_MIRROR Added support for Ubuntu on RPi
 #   Removal of VMware Pulse stuff
@@ -96,7 +98,7 @@
 ################################################################################
 
 ## Version of theScript.sh
-SCRIPT_VERSION="0.9r"
+SCRIPT_VERSION="0.9s"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -344,7 +346,7 @@ sub_menu1() {
         "LOCAL_MIRROR" "Add local mirror for APT " OFF \
         "CUSTOM_ALIAS" "Aliases for ease of use " OFF \
         "VIMRC" "Fill .vimrc with settings" OFF \
-        "CHANGE_LANG" "Change Language to US-English " OFF \
+        #"CHANGE_LANG" "Change Language to US-English " OFF \
         "RPI_CLONE" "Install RPI-Clone" OFF \
         3>&1 1>&2 2>&3)
 printl "Output SubMenu1: $SMENU1"
@@ -911,14 +913,11 @@ fi
 
 ## Module Functions
 fnFindStringInFile() {
-    # if grep -Fxq "${PATTERN_OUT}" "${TARGETFILE}"
-    if grep "${PATTERN_OUT}" "${TARGETFILE}"
+    if grep -Fxq "${PATTERN_OUT}" "${TARGETFILE}"
     then
         # code if found
         printl "- Target pattern found. Nothing else to do ..."
-    # elif grep -Fxq "${PATTERN_IN}" "${TARGETFILE}"
-    elif grep "${PATTERN_IN}" "${TARGETFILE}"
-    then
+    elif grep -Fxq "${PATTERN_IN}" "${TARGETFILE}"
         # code if not found
         printl "- Search pattern found. Replace with new one ..."
         fnDoReplace
@@ -1260,10 +1259,16 @@ fi
 ################################################################################
 
 ## Module Functions
-macDHCPOSCheck() {
-    ## Check if the required OS is Raspbian.
-    printl "  - $MODULE_NAME: Check OS is Ubuntu."
+fnMacDHCPOSCheck() {
+    ## Check if the required OS is supported.
+    printl "  - $MODULE_NAME: Check OS is supported."
     if [[ $OPSYS == *"UBUNTU"* ]]; then
+        printl "    - $MODULE_NAME: OS is $OPSYS."
+        MACDHCP_OS_CHECK="true"
+    elif [[ $OPSYS == *"RASPBIAN"* ]]; then
+        printl "    - $MODULE_NAME: OS is $OPSYS."
+        MACDHCP_OS_CHECK="true"
+    elif [[ $OPSYS == *"DEBIAN"* ]]; then
         printl "    - $MODULE_NAME: OS is $OPSYS."
         MACDHCP_OS_CHECK="true"
     else
@@ -1271,59 +1276,61 @@ macDHCPOSCheck() {
         MACDHCP_OS_CHECK="false"
     fi
 }
-#12345
-macDHCPFileCheck() {
-    # 01-netcfg.yaml
-    # 50-cloud-init.yaml
-    ## Check if the configuration file exists.
-    if [ ! -f /etc/netplan/50-cloud-init.yaml ]; then
-        printl "    - $MODULE_NAME: Configuration file does not exist."
-        MACDHCP_CONFILE_INST="false"
-    else
-        printl "    - $MODULE_NAME: Configuration file exists."
+
+fnMacDHCPCheckFiles() {
+    CONF_FILE_LOC="/etc/netplan"
+    CONF_FILE_1="01-netcfg.yaml"
+    CONF_FILE_2="50-cloud-init.yaml"
+
+    if [ -f ${CONF_FILE_LOC}/${CONF_FILE_1} ]; then
+        CONF_WORK_FILE=${CONF_FILE_LOC}/${CONF_FILE_1}
         MACDHCP_CONFILE_INST="true"
+    elif [ -f ${CONF_FILE_LOC}/${CONF_FILE_2} ]; then
+        CONF_WORK_FILE=${CONF_FILE_LOC}/${CONF_FILE_2}
+        MACDHCP_CONFILE_INST="true"
+    else
+        printl "    - Known config files not found. Exit here."
+        MACDHCP_CONFILE_INST="false"
+        # return
     fi
 }
 
-macDHCPAlreadyInstalled() {
-    printl "    - $MODULE_NAME: Check if already configured."
-    ## Check if the macDHCP is already configured.
+fnMacDHCPEnabled() {
+    # Check if DHCP is enabled
+    grep -Fxq "$CONF_STRING_1" "${CONF_WORK_FILE}"
+    if [ $? -eq 0 ]; then
+        printl "    - DHCP is enabled."
+        MACDHCP_EN="true"
+    else
+        printl "    - DHCP is NOT enabled."
+        MACDHCP_EN="false"
+    fi
+}
+
+fnMacDHCPUseMac() {
+    # Check if the DHCP is already configured to use mac address.
     grep -Fxq "$CONF_STRING_2" "$CONF_FILE"
     if [ $? -eq 0 ]; then
-        printl "    - $MODULE_NAME: Already configured."
+        printl "    - Using mac address for DHCP is already enabled."
         MACDHCP_CONF="true"
     else
-        printl "    - $MODULE_NAME: Not yet configured."
+        printl "    - Using mac address for DHCP is not (yet) enabled."
         MACDHCP_CONF="false"
     fi
 }
 
-macDHCPChangeConfig() {
-    ## Insert line after match found
-    # sed '/^anothervalue=.*/a after=me' test.txt
-    ## Increase macDHCP capacity
-    printl "    - $MODULE_NAME: Change capacity."
-
-    ## Check for SIZE value in the config file and make the modifications.
-
-    # printl "String 1: $CONF_STRING_1"
-    # printl "String 2: $CONF_STRING_2"
-    # printl "File    : $CONF_FILE"
-    # read -p "Press ENTER to continue ..."
-
+fnMacDHCPChangeConfig() {
+    # Add the configuration line to the config file
     if grep -Fq "$CONF_STRING_1" "$CONF_FILE"; then
-        # Replace the line with the new value.
+        # Add the line with the new value after the DHCP enabled string.
         sudo sed -i "/${CONF_STRING_1}/a\\$CONF_STRING_2" "$CONF_FILE"
-        # cat $CONF_FILE
-        # read -p "Press ENTER to continue ..."
-
         ## Check and log success.
         if [ $? -eq 0 ]; then
-            printl "    - $MODULE_NAME: Configuration succesfully changed."
+            printl "    - Configuration succesfully changed."
             CONF_CHANGE_SUCCES="true"
             #netplan apply
         else
-            printl "    - $MODULE_NAME: Misconfiguration. No changes made to configuration."
+            printl "    - ERROR: No changes made to configuration."
             CONF_CHANGE_SUCCES="false"
             return ## Exit function on ERROR.
         fi
@@ -1337,48 +1344,46 @@ macDHCPChangeConfig() {
 ################################################################################
 ## Module Logic
 
-macDHCP() {
+fnMacDHCP() {
     printstatus "Configure DHCP with MAC address"
-    MODULE_NAME=macDHCP
-    CONF_FILE="/etc/netplan/50-cloud-init.yaml"
+    MODULE_NAME=MACDHCP
+
+    # Check for supported OS
+    fnMacDHCPOSCheck
+    if [[ ${MACDHCP_OS_CHECK} = false ]] && return
+
+    # Check what config file to use
+    fnMacDHCPCheckFiles
+    if [[ ${MACDHCP_CONFILE_INST} = false ]] && return
+
+    # Strings of settings
     CONF_STRING_1='            dhcp4: true'
     CONF_STRING_2='            dhcp-identifier: mac'
-    macDHCPOSCheck ## Check if the required OS is Ubuntu.
 
-    if [[ $MACDHCP_OS_CHECK == "true" ]]; then
-        ## Correct OS to install on.
-        macDHCPFileCheck ## Check if the required configuraiton file exists.
-        if [[ $MACDHCP_CONFILE_INST == "true" ]]; then
-            ## Configuration file exists.
-            macDHCPAlreadyInstalled ## Check if the macDHCP is already installed.
-            if [[ $MACDHCP_CONF == "false" ]]; then
-                ## macDHCP is not yet configured.
-                printl "    - $MODULE_NAME: Initiate config change"
-                macDHCPChangeConfig ## Change macDHCP capacity.
-            fi
-        else
-            printl "    - $MODULE_NAME: ERROR - No configuration file. Exit here."
-            return ## Exit function on ERROR.
-        fi
-    else
-        printl "    - $MODULE_NAME: ERROR - Incorrect OS. Exit here."
-        return ## Exit function on ERROR.
-    fi
+    # Check if DHCP is enabled
+    fnMacDHCPEnabled
+    if [[ ${MACDHCP_EN} = false ]] && return
+
+    # Check if DHCP is already set to use mac address
+    fnMacDHCPUseMac
+    if [[ ${MACDHCP_CONF} = true ]] && return
+
+    # Add configuration to the file
+    fnMacDHCPChangeConfig
 
     ## Cleanup variables
     unset CONF_FILE
     unset MODULE_NAME
     unset CONF_STRING_1
     unset CONF_STRING_2
-    unset macDHCP_INSTALLED
     unset MACDHCP_OS_CHECK
-    unset MACDHCP_CONF
-    unset CONF_CHANGE_SUCCES
     unset MACDHCP_CONFILE_INST
+    unset MACDHCP_EN
+    unset CONF_CHANGE_SUCCES
 }
 
 if [[ $MYMENU == *"MACDHCP"* ]]; then
-    macDHCP
+    fnMacDHCP
 fi
 
 
