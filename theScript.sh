@@ -911,9 +911,6 @@ fi
 
 ## Module Functions
 fnFindStringInFile() {
-    printl "Pattern out: ${PATTERN_OUT}"
-    printl "Pattern in: ${PATTERN_IN}"
-    printl "Search in file: ${TARGETFILE}"
     # if grep -Fxq "${PATTERN_OUT}" "${TARGETFILE}"
     if grep "${PATTERN_OUT}" "${TARGETFILE}"
     then
@@ -1274,8 +1271,10 @@ macDHCPOSCheck() {
         MACDHCP_OS_CHECK="false"
     fi
 }
-
+#12345
 macDHCPFileCheck() {
+    # 01-netcfg.yaml
+    # 50-cloud-init.yaml
     ## Check if the configuration file exists.
     if [ ! -f /etc/netplan/50-cloud-init.yaml ]; then
         printl "    - $MODULE_NAME: Configuration file does not exist."
