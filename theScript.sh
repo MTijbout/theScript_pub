@@ -335,6 +335,8 @@ MYMENU="$MYMENU $MMENU1"
 ## Sub Menus Definition
 ################################################################################
 
+        #"CHANGE_LANG" "Change Language to US-English " OFF \
+
 sub_menu1() {
     SMENU1=$(whiptail --checklist --notags --title "Select customization options" \
         "\nSelect items as required then hit OK " 25 75 16 \
@@ -346,7 +348,6 @@ sub_menu1() {
         "LOCAL_MIRROR" "Add local mirror for APT " OFF \
         "CUSTOM_ALIAS" "Aliases for ease of use " OFF \
         "VIMRC" "Fill .vimrc with settings" OFF \
-        #"CHANGE_LANG" "Change Language to US-English " OFF \
         "RPI_CLONE" "Install RPI-Clone" OFF \
         3>&1 1>&2 2>&3)
 printl "Output SubMenu1: $SMENU1"
