@@ -1381,7 +1381,6 @@ fnMacDHCP() {
     unset MACDHCP_CONFILE_INST
     unset MACDHCP_EN
     unset CONF_CHANGE_SUCCES
-
 }
 
 if [[ $MYMENU == *"MACDHCP"* ]]; then
