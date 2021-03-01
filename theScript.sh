@@ -28,6 +28,7 @@
 # Version history:
 # 0.9s Marco Tijbout:
 #   MACDHCP consider more possible configurations for ubuntu
+#   DISAUPD - New module to disable automatic updates on ubuntu
 # 0.9r Marco Tijbout:
 #   LOCAL_MIRROR Added support for Ubuntu on RPi
 #   Removal of VMware Pulse stuff
@@ -358,6 +359,7 @@ MYMENU="$MYMENU $MMENU1"
 sub_menu1() {
     SMENU1=$(whiptail --checklist --notags --title "Select customization options" \
         "\nSelect items as required then hit OK " 25 75 16 \
+        "DISAUPD" "Disable automatic updates on Ubuntu" ON \
         "SHOW_IP" "Show IP on logon screen " OFF \
         "MACDHCP" "Configure to use MAC for DHCP " OFF \
         "IP_FIX" "Configure IP networking " OFF \
@@ -1398,6 +1400,55 @@ fnMacDHCP() {
 if [[ $MYMENU == *"MACDHCP"* ]]; then
     fnMacDHCP
 fi
+
+
+################################################################################
+# Disable automatic updates
+################################################################################
+
+## Module Functions
+
+fnDisableAutoUpdates() {
+    printl "- Disable automatic updates in Ubuntu:"
+    printl "  - Get Operating System information ..."
+    . /etc/os-release
+    OPSYS=${ID^^}
+
+    printl "  - Check if OS is Ubuntu. Skip if not ..."
+    if  [[ $OPSYS != *"UBUNTU"* ]]; then
+        printl "    - OS is not Ubuntu. Skipping ..."
+        return
+    fi
+    printl "    - Operating system: ${OPSYS}"
+
+    # Config file where the auto update feature is managed
+    CONF_FILE="/etc/apt/apt.conf.d/20auto-upgrades"
+
+    print "  - Check for config file: "
+    if [ ! -f ${CONF_FILE} ]; then
+        printl "    - Config file does not exist, return."
+        return
+    else
+        printl "    - Config file found ..."
+    fi
+
+    printl "  - Changing auto update settings:"
+
+    printl "    - Change 1/2 ..."
+    OLDVAL='APT::Periodic::Update-Package-Lists "1";'
+    NEWVAL='APT::Periodic::Update-Package-Lists "0";'
+    # Replace the old line for the new line
+    sudo sed -i '+s+'"${OLDVAL}"'+'"${NEWVAL}"'+' ${CONF_FILE}
+
+    printl "    - Change 2/2 ..."
+    OLDVAL='APT::Periodic::Unattended-Upgrade "1";'
+    NEWVAL='APT::Periodic::Unattended-Upgrade "0";'
+    # Replace the old line for the new line
+    sudo sed -i '+s+'"${OLDVAL}"'+'"${NEWVAL}"'+' ${CONF_FILE}
+}
+
+# Start when module is selected
+[[ $MYMENU == *"DISAUPD"* ]] && fnDisableAutoUpdates
 
 
 ################################################################################
