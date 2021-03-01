@@ -1410,7 +1410,7 @@ fi
 ## Module Functions
 
 fnDisableAutoUpdates() {
-    printl "- Disable automatic updates in Ubuntu:"
+    printstatus "- Disable automatic updates in Ubuntu:"
     printl "  - Get Operating System information ..."
     . /etc/os-release
     OPSYS=${ID^^}
@@ -1459,9 +1459,10 @@ fnDisableAutoUpdates() {
 
 # Functions for a modular approach
 fnSetTimezone() {
+    printstatus "Set the timezone to Europe/Amsterdam:"
     TIMEZONE="Europe/Amsterdam"
 
-    printl "- Set the timezone to ${TIMEZONE}"
+    printl "  - Set the timezone to ${TIMEZONE}"
     sudo timedatectl set-timezone ${TIMEZONE}
 }
 
