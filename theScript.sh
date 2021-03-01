@@ -1424,7 +1424,7 @@ fnDisableAutoUpdates() {
     # Config file where the auto update feature is managed
     CONF_FILE="/etc/apt/apt.conf.d/20auto-upgrades"
 
-    print "  - Check for config file: "
+    printl "  - Check for config file: "
     if [ ! -f ${CONF_FILE} ]; then
         printl "    - Config file does not exist, return."
         return
