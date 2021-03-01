@@ -29,6 +29,7 @@
 # 0.9s Marco Tijbout:
 #   MACDHCP consider more possible configurations for ubuntu
 #   DISAUPD - New module to disable automatic updates on ubuntu
+#   TZADAM - New module to set timezone to Amsterdam
 # 0.9r Marco Tijbout:
 #   LOCAL_MIRROR Added support for Ubuntu on RPi
 #   Removal of VMware Pulse stuff
@@ -360,6 +361,7 @@ sub_menu1() {
     SMENU1=$(whiptail --checklist --notags --title "Select customization options" \
         "\nSelect items as required then hit OK " 25 75 16 \
         "DISAUPD" "Disable automatic updates on Ubuntu" ON \
+        "TZADAM" "Set timezone to Europe/Amsterdam" ON \
         "SHOW_IP" "Show IP on logon screen " OFF \
         "MACDHCP" "Configure to use MAC for DHCP " OFF \
         "IP_FIX" "Configure IP networking " OFF \
@@ -1401,7 +1403,6 @@ if [[ $MYMENU == *"MACDHCP"* ]]; then
     fnMacDHCP
 fi
 
-
 ################################################################################
 # Disable automatic updates
 ################################################################################
@@ -1449,6 +1450,23 @@ fnDisableAutoUpdates() {
 
 # Start when module is selected
 [[ $MYMENU == *"DISAUPD"* ]] && fnDisableAutoUpdates
+
+################################################################################
+# Set timezone to Europe/Amsterdam
+################################################################################
+
+## Module Functions
+
+# Functions for a modular approach
+fnSetTimezone() {
+    TIMEZONE="Europe/Amsterdam"
+
+    printl "- Set the timezone to ${TIMEZONE}"
+    sudo timedatectl set-timezone ${TIMEZONE}
+}
+
+# Start when module is selected
+[[ $MYMENU == *"TZADAM"* ]] && fnSetTimezone
 
 
 ################################################################################
