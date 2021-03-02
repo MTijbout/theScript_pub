@@ -962,6 +962,17 @@ moduleLocalMirror () {
         # Check if already has the configuration
         fnFindStringInFile
 
+    elif  [[ $OPSYS == *"UBUNTU"* ]] && [[ ${SYSARCH} == *"X86_64"* ]]; then
+        printl "Ubuntu on ${SYSARCH} detected..."
+
+        ## Prepare settings as variables
+        TARGETFILE="/etc/apt/sources.list"
+        PATTERN_IN="http://archive.ubuntu.com/ubuntu/"
+        PATTERN_OUT="http://ftp.tudelft.nl/archive.ubuntu.com/"
+
+        # Check if already has the configuration
+        fnFindStringInFile
+
     else
         printl "Nothing changed. No options available yet for this OS and hardware combination."
     fi
@@ -972,9 +983,8 @@ moduleLocalMirror () {
     unset PATTERN_OUT
 }
 
-if [[ $MYMENU == *"LOCAL_MIRROR"* ]]; then
-    moduleLocalMirror
-fi
+[[ $MYMENU == *"LOCAL_MIRROR"* ]] && moduleLocalMirror
+
 
 ################################################################################
 # Add additional aliases to the profile of the user.
