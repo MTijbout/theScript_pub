@@ -384,13 +384,12 @@ MYMENU="$MYMENU $MMENU1"
 ## Sub Menus Definition
 ################################################################################
 
-        #"CHANGE_LANG" "Change Language to US-English " OFF \
-
 sub_menu1() {
     SMENU1=$(whiptail --checklist --notags --title "Select customization options" \
         "\nSelect items as required then hit OK " 25 75 16 \
-        "DISAUPD" "Disable automatic updates on Ubuntu" ON \
-        "TZADAM" "Set timezone to Europe/Amsterdam" ON \
+        "DISAUPD" "Disable automatic updates on Ubuntu" OFF \
+        "TZADAM" "Set timezone to Europe/Amsterdam" OFF \
+        "CHANGE_LANG" "Change Language to US-English " OFF \
         "SHOW_IP" "Show IP on logon screen " OFF \
         "MACDHCP" "Configure to use MAC for DHCP " OFF \
         "IP_FIX" "Configure IP networking " OFF \
@@ -443,6 +442,8 @@ if [[ $MYMENU == "" ]]; then
     whiptail --title "Installation Aborted" --msgbox "Cancelled as requested." 8 78
     exit
 fi
+
+printl "Output Menu selections: ${MYMENU}"
 
 ################################################################################
 ##                  - Executing on the selected items -                       ##
@@ -515,32 +516,13 @@ moduleIPFix() {
 ################################################################################
 # Force the system to use en_US as the language.
 ################################################################################
-if [[ $MYMENU == *"CHANGE_LANG"* ]]; then
-    printstatus "Change the systems language settings to en_US ..."
 
-    printl "Check if language settings exists in system environments settings. If notadd them."
-    if grep -Fxq "LANGUAGE = en_US" /etc/environment
-    then
-        printl "String found, /etc/environment does not need updating."
-        break
-    else
-        printl "String not found, settings will be added to /etc/environment"
+moduleChangeLang() {
+    printstatus "Change the systems language settings to en_US UTF8 ..."
+    localectl set-locale LANG=en_US.UTF8
+    EXITCODE=$?; fnSucces $EXITCODE
 
-    ## Add language settings to the system environments settings.
-    ## Added .utf-8 for error on CentOS
-cat > /etc/environment << EOF
-LANGUAGE = en_US.utf-8
-LC_ALL = en_US.utf-8
-LANG = en_US.utf-8
-LC_TYPE = en_US.utf-8
-EOF
-    fi
-
-    if [[ $OPSYS == *"CENTOS"* ]]; then
-        localedef -i en_US -f UTF-8 en_US.UTF-8
-    fi
-
-    printl "Check the SSH server config not to accept settings from client."
+    printl "- Check the SSH server config not to accept settings from client."
     if grep -Fxq "#AcceptEnv LANG LC_*" /etc/ssh/sshd_config
     then
         printl "/etc/ssh/sshd_config already updated."
@@ -565,7 +547,7 @@ EOF
     systemctl restart sshd
     if [ $? -eq 0 ]; then
         printl "sshd service is restarted."
-    else 
+    else
         printl "Could not restart sshd service."
     fi
     ## Have the script reboot at the end.
@@ -574,8 +556,11 @@ EOF
     ## Cleanup variables
     unset NEWVALUE
 fi
+}
 
-## Moudle disabled
+# Start when module is selected
+[[ $MYMENU == *"CHANGE_LANG"* ]] && moduleChangeLang
+
 
 ################################################################################
 # Installing RPI-Clone
