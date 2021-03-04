@@ -103,7 +103,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="0.9s"
-LAST_MODIFICATION="20210304-1833"
+LAST_MODIFICATION="20210304-1840"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -1506,15 +1506,16 @@ fnSetTimezone() {
 ## Testing with Case to evaluate and order activity
 ################################################################################
 
-IFS='" "' read -r -a array <<< "${MYMENU}"
+# IFS='" "' read -r -a array <<< "${MYMENU}"
+array=(${MYMENU//" "/ })
 for element in "${array[@]}"
 do
-    echo "$element"
+    echo -e "\n Processing: $element"
     case ${element} in
-    *"CHANGE_LANG"*)
+    CHANGE_LANG)
         printl "Option CHANGE_LANG was selected"
         ;;
-    *"CUST_OPS"*)
+    CUST_OPS)
         printl "Option CUST_OPS was selected"
         ;;
     1)
@@ -1530,7 +1531,7 @@ do
         ;;
 
     *)
-        echo "Unknown - ${MYMENU}"
+        echo "Unknown - ${element}"
         ;;
     esac
 done
