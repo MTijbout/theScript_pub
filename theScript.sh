@@ -1510,7 +1510,7 @@ fnSetTimezone() {
 for element in "${MYMENU[@]}"; do
     echo -e "\nWorking on element ${element}"
     case ${element} in
-      *CHANGE_LANG*                ) printl "Option CHANGE_LANG was selected";;
+      "CHANGE_LANG"               ) printl "Option CHANGE_LANG was selected";;
 
     1)
         echo "Hello"
