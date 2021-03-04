@@ -103,7 +103,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="0.9s"
-LAST_MODIFICATION="20210304-173717"
+LAST_MODIFICATION="20210304-1804"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -1502,34 +1502,56 @@ fnSetTimezone() {
 
 
 ################################################################################
-## Some cleanup at the end...
+## Testing with Case to evaluate and order activity
 ################################################################################
-#rm -rf /var/cache/apt/archives/apt-fast
-#$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
 
-for element in "${MYMENU[@]}"; do
-    echo -e "\nWorking on element ${element}"
-    case ${element} in
-    CHANGE_LANG)
-        printl "Option CHANGE_LANG was selected"
-        ;;
-    1)
-        echo "Hello"
-        ;;
+echo -e "\nWorking on element ${element}"
+case ${MYMENU} in
+CHANGE_LANG)
+    printl "Option CHANGE_LANG was selected"
+    ;;
+1)
+    echo "Hello"
+    ;;
 
-    2)
-        echo "call"
-        ;;
+2)
+    echo "call"
+    ;;
 
-    3)
-        echo "bye"
-        ;;
+3)
+    echo "bye"
+    ;;
 
-    *)
-        echo "Unknown - ${element}"
-        ;;
-    esac
-done
+*)
+    echo "Unknown - ${element}"
+    ;;
+esac
+
+
+
+# for element in "${MYMENU[@]}"; do
+#     echo -e "\nWorking on element ${element}"
+#     case ${element} in
+#     CHANGE_LANG)
+#         printl "Option CHANGE_LANG was selected"
+#         ;;
+#     1)
+#         echo "Hello"
+#         ;;
+
+#     2)
+#         echo "call"
+#         ;;
+
+#     3)
+#         echo "bye"
+#         ;;
+
+#     *)
+#         echo "Unknown - ${element}"
+#         ;;
+#     esac
+# done
 
 
 ################################################################################
