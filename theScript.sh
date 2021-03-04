@@ -504,7 +504,7 @@ moduleIPFix() {
 }
 
 # Start when module is selected
-if [[ $MYMENU == *"IP_FIX"* ]] && moduleIPFix
+[[ $MYMENU == *"IP_FIX"* ]] && moduleIPFix
 
 
 ################################################################################
@@ -674,7 +674,7 @@ moduleCreateSysadmin() {
 }
 
 # Start when module is selected
-if [[ $MYMENU == *"CREATE_SYSADMIN"* ]] && moduleCreateSysadmin
+[[ $MYMENU == *"CREATE_SYSADMIN"* ]] && moduleCreateSysadmin
 
 ################################################################################
 # Updating the Host.
@@ -928,7 +928,7 @@ EOF
 }
 
 # Start when module is selected
-if [[ $MYMENU == *"ADD_CSCRIPT"* ]] && moduleAddCscript
+[[ $MYMENU == *"ADD_CSCRIPT"* ]] && moduleAddCscript
 
 
 ################################################################################
@@ -1090,7 +1090,7 @@ moduleVimrc() {
     printstatus "Fill .vimrc with settings ..."
     curl https://raw.githubusercontent.com/MTijbout/theScript_pub/master/vimrc -o "/home/${USERID}/.vimrc"
     EXITCODE=$?; fnSucces $EXITCODE
-
+}
 #     TARGETFILE="$WORKDIR/.vimrc"
 #     cat > $TARGETFILE << EOF
 # set list
@@ -1098,7 +1098,7 @@ moduleVimrc() {
 # syntax on
 # colorscheme desert
 # EOF
-}
+
 
 # Start when module is selected
 [[ $MYMENU == *"VIMRC"* ]] && moduleVimrc
