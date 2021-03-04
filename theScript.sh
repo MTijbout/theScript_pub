@@ -1526,7 +1526,7 @@ for element in "${MYMENU[@]}"; do
         ;;
 
     *)
-        echo "Unknown"
+        echo "Unknown - ${element}"
         ;;
     esac
 done
