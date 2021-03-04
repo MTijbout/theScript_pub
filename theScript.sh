@@ -103,6 +103,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="0.9s"
+LAST_MODIFICATION="20210304-1535"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -355,11 +356,12 @@ install_lsb_release
 DISTRO=$(/usr/bin/lsb_release -rs)
 CHECK64=$(uname -m)
 printl ""
+printl "Script version: ${SCRIPT_VERSION}"
+printl "Last modification: ${LAST_MODIFICATION}"
+printl ""
 printl "DISTRO: $DISTRO"
 printl "CHECK64: $CHECK64"
 printl "OPSYS: $OPSYS"
-printl ""
-printl "Last modification: 20210304-153300"
 printl ""
 
 ################################################################################
