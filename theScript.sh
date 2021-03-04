@@ -308,11 +308,29 @@ printstatus "Making sure THE SCRIPT works..."
 ## Install required software for functional menu.
 # $PCKMGR $AQUIET $PCK_INST whiptail ccze net-tools curl 2>&1 | tee -a $LOGFILE
 
-REQ_PACKAGES=( whiptail ccze net-tools curl )
-for i in "${REQ_PACKAGES[@]}"
-do
-    sudo dpkg -s ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
-done
+fnCheckRequiedPackages() {
+    printl "- Check for required packages:"
+    REQ_PACKAGES=( whiptail ccze net-tools curl )
+
+    if [[ $OPSYS == *"CENTOS"* ]]; then
+        for i in "${REQ_PACKAGES[@]}"
+        do
+            rpm -qa | grep ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+        done
+    else
+        for i in "${REQ_PACKAGES[@]}"
+        do
+            sudo dpkg -s ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+        done
+    fi
+}
+fnCheckRequiedPackages
+
+# REQ_PACKAGES=( whiptail ccze net-tools curl )
+# for i in "${REQ_PACKAGES[@]}"
+# do
+#     sudo dpkg -s ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+# done
 
 ## Photon
 # tdnf install rpm-build
