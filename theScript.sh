@@ -1509,7 +1509,7 @@ fnSetTimezone() {
 
 for element in "${MYMENU[@]}"; do
     case ${element} in
-      CHANGE_LANG                ) printl "Option CHANGE_LANG was selected";;
+      *CHANGE_LANG*                ) printl "Option CHANGE_LANG was selected";;
 
     1)
         echo "Hello"
