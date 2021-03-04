@@ -1505,9 +1505,9 @@ fnSetTimezone() {
 ## Testing with Case to evaluate and order activity
 ################################################################################
 
-echo -e "\nWorking on element ${element}"
+echo -e "\nWorking on element ${MYMENU}"
 case ${MYMENU} in
-CHANGE_LANG)
+*"CHANGE_LANG"*)
     printl "Option CHANGE_LANG was selected"
     ;;
 1)
@@ -1523,7 +1523,7 @@ CHANGE_LANG)
     ;;
 
 *)
-    echo "Unknown - ${element}"
+    echo "Unknown - ${MYMENU}"
     ;;
 esac
 
