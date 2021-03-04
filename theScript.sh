@@ -1503,46 +1503,46 @@ fnSetTimezone() {
 
 
 ################################################################################
-## Testing with Case to evaluate and order activity
+## Call the selected options for execution
 ################################################################################
 
-# IFS='" "' read -r -a array <<< "${MYMENU}"
-# array=(${MYMENU//\" \"/ })
-array=$(sed 's/"//g' <<<"${MYMENU}")
-array=($array)
-echo -e "\n- The array contains: ${array[@]}"
+# Strip all double quotes from the string $MYMENU:
+CONVERSION=$(sed 's/"//g' <<<"${MYMENU}")
 
-# array2=(${array//\"})
-# array=$(sed 's/"//g' <<<"${MYMENU}")
+# Convert the string into an array:
+ARRAY=($CONVERSION)
 
-# array=(${sed 's/"//g' <<<"$MYMENU"})
-for element in "${array[@]}"
+# Evaluate all elements in the array:
+for ELEMENT in "${ARRAY[@]}"
 do
-    echo -e "\n- Processing: $element"
-    case ${element} in
-    CHANGE_LANG)
-        printl "  - Option CHANGE_LANG was selected"
-        ;;
-    CUST_OPS)
-        printl "  - Option CUST_OPS was selected"
-        ;;
-    SHOW_IP)
-        printl "  - Option SHOW_IP was selected"
-        ;;
-    1)
-        echo "Hello"
-        ;;
+    echo -e "\n- Processing: ${ELEMENT}"
+    case ${ELEMENT} in
+    # Main Menu
+    log2ram             ) moduleLog2RAM ;;
 
-    2)
-        echo "call"
-        ;;
+    # Customization options
+    DISAUPD             ) fnDisableAutoUpdates ;;
+    TZADAM              ) fnSetTimezone ;;
+    CHANGE_LANG         ) moduleChangeLang ;;
+    SHOW_IP             ) moduleShowIp ;;
+    MACDHCP             ) fnMacDHCP ;;
+    IP_FIX              ) moduleIPFix ;;
+    CUSTOM_PROMPT       ) moduleCustomPrompt ;;
+    ADD_CSCRIPT         ) moduleAddCscript ;;
+    LOCAL_MIRROR        ) moduleLocalMirror ;;
+    CUSTOM_ALIAS        ) moduleCustomAlias ;;
+    VIMRC               ) moduleVimrc ;;
+    RPI_CLONE           ) fnInstallRpiclone ;;
 
-    3)
-        echo "bye"
-        ;;
+    # Security options
+    CREATE_SYSADMIN     ) moduleCreateSysadmin ;;
+    UPDATE_HOST         ) moduleUpdateHost ;;
+    NO_PASS_SUDO        ) moduleNoPassSudo ;;
+    REGENERATE_SSH_KEYS ) moduleRegenerateSshKeys ;;
+    HOST_RENAME         ) moduleHostRename ;;
 
     *)
-        echo "Unknown - ${element}"
+        printl "Not sure what happened here. Do not know what to do with: ${ELEMENT}"
         ;;
     esac
 done
