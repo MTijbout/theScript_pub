@@ -1088,18 +1088,21 @@ EOF
 ## Module Logic
 moduleVimrc() {
     printstatus "Fill .vimrc with settings ..."
+    curl https://raw.githubusercontent.com/MTijbout/theScript_pub/master/vimrc -o "/home/${USERID}/.vimrc"
+    EXITCODE=$?; fnSucces $EXITCODE
 
-    TARGETFILE="$WORKDIR/.vimrc"
-    cat > $TARGETFILE << EOF
-set list
-set number
-syntax on
-colorscheme desert
-EOF
+#     TARGETFILE="$WORKDIR/.vimrc"
+#     cat > $TARGETFILE << EOF
+# set list
+# set number
+# syntax on
+# colorscheme desert
+# EOF
 }
 
 # Start when module is selected
 [[ $MYMENU == *"VIMRC"* ]] && moduleVimrc
+
 
 ################################################################################
 # Remove the need to type a password when using sudo.
