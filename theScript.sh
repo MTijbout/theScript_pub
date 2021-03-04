@@ -315,6 +315,7 @@ fnCheckRequiedPackages() {
     if [[ $OPSYS == *"CENTOS"* ]]; then
         for i in "${REQ_PACKAGES[@]}"
         do
+            printl "  - Checking package ${i}"
             rpm -qa | grep ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
         done
     else
