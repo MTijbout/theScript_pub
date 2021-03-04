@@ -1507,16 +1507,27 @@ fnSetTimezone() {
 ################################################################################
 
 # IFS='" "' read -r -a array <<< "${MYMENU}"
-array=(${MYMENU//\" \"/ })
+# array=(${MYMENU//\" \"/ })
+array=$(sed 's/"//g' <<<"${MYMENU}")
+array=($array)
+echo -e "\n- The array contains: ${array[@]}"
+
+# array2=(${array//\"})
+# array=$(sed 's/"//g' <<<"${MYMENU}")
+
+# array=(${sed 's/"//g' <<<"$MYMENU"})
 for element in "${array[@]}"
 do
-    echo -e "\n Processing: $element"
+    echo -e "\n- Processing: $element"
     case ${element} in
     CHANGE_LANG)
-        printl "Option CHANGE_LANG was selected"
+        printl "  - Option CHANGE_LANG was selected"
         ;;
     CUST_OPS)
-        printl "Option CUST_OPS was selected"
+        printl "  - Option CUST_OPS was selected"
+        ;;
+    SHOW_IP)
+        printl "  - Option SHOW_IP was selected"
         ;;
     1)
         echo "Hello"
