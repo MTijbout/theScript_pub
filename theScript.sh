@@ -30,6 +30,7 @@
 #   MACDHCP consider more possible configurations for ubuntu
 #   DISAUPD - New module to disable automatic updates on ubuntu
 #   TZADAM - New module to set timezone to Amsterdam
+#   Changed module activation to one-liner
 # 0.9r Marco Tijbout:
 #   LOCAL_MIRROR Added support for Ubuntu on RPi
 #   Removal of VMware Pulse stuff
@@ -479,9 +480,9 @@ moduleIPFix() {
     unset SUPPORTED_OS
 }
 
-if [[ $MYMENU == *"IP_FIX"* ]]; then
-    moduleIPFix
-fi
+# Start when module is selected
+if [[ $MYMENU == *"IP_FIX"* ]] && moduleIPFix
+
 
 ################################################################################
 # Force the system to use en_US as the language.
@@ -545,6 +546,8 @@ EOF
     ## Cleanup variables
     unset NEWVALUE
 fi
+
+## Moudle disabled
 
 ################################################################################
 # Installing RPI-Clone
@@ -647,9 +650,8 @@ moduleCreateSysadmin() {
     fi
 }
 
-if [[ $MYMENU == *"CREATE_SYSADMIN"* ]]; then
-    moduleCreateSysadmin
-fi
+# Start when module is selected
+if [[ $MYMENU == *"CREATE_SYSADMIN"* ]] && moduleCreateSysadmin
 
 ################################################################################
 # Updating the Host.
@@ -680,9 +682,9 @@ moduleUpdateHost() {
     REBOOTREQUIRED=1
 }
 
-if [[ $MYMENU == *"UPDATE_HOST"* ]]; then
-    moduleUpdateHost
-fi
+# Start when module is selected
+[[ $MYMENU == *"UPDATE_HOST"* ]] && moduleUpdateHost
+
 
 ################################################################################
 # Regenerate the Host SSH keys.
@@ -717,9 +719,9 @@ moduleRegenerateSshKeys() {
     REBOOTREQUIRED=1
 }
 
-if [[ $MYMENU == *"REGENERATE_SSH_KEYS"* ]]; then
-    moduleRegenerateSshKeys
-fi
+# Start when module is selected
+[[ $MYMENU == *"REGENERATE_SSH_KEYS"* ]] && moduleRegenerateSshKeys
+
 
 ################################################################################
 # Show the IP address of the Host at the login screen.
@@ -755,9 +757,10 @@ moduleShowIp() {
         unset TARGETFILE
     fi
 }
-if [[ $MYMENU == *"SHOW_IP"* ]]; then
-    moduleShowIp
-fi
+
+# Start when module is selected
+[[ $MYMENU == *"SHOW_IP"* ]] && moduleShowIp
+
 
 ################################################################################
 # Rename the Host.
@@ -819,9 +822,9 @@ moduleHostRename() {
     unset cloudFile
 }
 
-if [[ $MYMENU == *"HOST_RENAME"* ]]; then
-    moduleHostRename
-fi
+# Start when module is selected
+[[ $MYMENU == *"HOST_RENAME"* ]] && moduleHostRename
+
 
 ################################################################################
 # Apply a more convenient Prompt for the user.
@@ -860,9 +863,9 @@ moduleCustomPrompt () {
     unset NEWPROMPT
 }
 
-if [[ $MYMENU == *"CUSTOM_PROMPT"* ]]; then
-    moduleCustomPrompt
-fi
+# Start when module is selected
+[[ $MYMENU == *"CUSTOM_PROMPT"* ]] && moduleCustomPrompt
+
 
 ################################################################################
 # Add convenience in creating scripts.
@@ -901,9 +904,9 @@ EOF
     unset WORKFILE3
 }
 
-if [[ $MYMENU == *"ADD_CSCRIPT"* ]]; then
-    moduleAddCscript
-fi
+# Start when module is selected
+if [[ $MYMENU == *"ADD_CSCRIPT"* ]] && moduleAddCscript
+
 
 ################################################################################
 # Add local mirror (NL).
@@ -962,17 +965,6 @@ moduleLocalMirror () {
         # Check if already has the configuration
         fnFindStringInFile
 
-    elif  [[ $OPSYS == *"UBUNTU"* ]] && [[ ${SYSARCH} == *"X86_64"* ]]; then
-        printl "Ubuntu on ${SYSARCH} detected..."
-
-        ## Prepare settings as variables
-        TARGETFILE="/etc/apt/sources.list"
-        PATTERN_IN="http://archive.ubuntu.com/ubuntu/"
-        PATTERN_OUT="http://ftp.tudelft.nl/archive.ubuntu.com/"
-
-        # Check if already has the configuration
-        fnFindStringInFile
-
     else
         printl "Nothing changed. No options available yet for this OS and hardware combination."
     fi
@@ -983,6 +975,7 @@ moduleLocalMirror () {
     unset PATTERN_OUT
 }
 
+# Start when module is selected
 [[ $MYMENU == *"LOCAL_MIRROR"* ]] && moduleLocalMirror
 
 
@@ -1059,9 +1052,9 @@ EOF
     unset WORKFILE2
 }
 
-if [[ $MYMENU == *"CUSTOM_ALIAS"* ]]; then
-    moduleCustomAlias
-fi
+# Start when module is selected
+[[ $MYMENU == *"CUSTOM_ALIAS"* ]] && moduleCustomAlias
+
 
 ################################################################################
 # Fill .vimrc with settings
@@ -1082,9 +1075,8 @@ colorscheme desert
 EOF
 }
 
-if [[ $MYMENU == *"VIMRC"* ]]; then
-    moduleVimrc
-fi
+# Start when module is selected
+[[ $MYMENU == *"VIMRC"* ]] && moduleVimrc
 
 ################################################################################
 # Remove the need to type a password when using sudo.
@@ -1105,9 +1097,9 @@ moduleNoPassSudo() {
     fi
 }
 
-if [[ $MYMENU == *"NO_PASS_SUDO"* ]]; then
-    moduleNoPassSudo
-fi
+# Start when module is selected
+[[ $MYMENU == *"NO_PASS_SUDO"* ]] &&moduleNoPassSudo
+
 
 ################################################################################
 # Install Log2RAM to extend the life SD cards.
@@ -1258,9 +1250,9 @@ moduleLog2RAM() {
     unset GIT_INSTALL_SUCCES
 }
 
-if [[ $MYMENU == *"log2ram"* ]]; then
-    moduleLog2RAM
-fi
+# Start when module is selected
+[[ $MYMENU == *"log2ram"* ]] && moduleLog2RAM
+
 
 ################################################################################
 # Configure to use the MAC address for DHCP.
@@ -1409,9 +1401,9 @@ fnMacDHCP() {
     unset CONF_CHANGE_SUCCES
 }
 
-if [[ $MYMENU == *"MACDHCP"* ]]; then
-    fnMacDHCP
-fi
+# Start when module is selected
+[[ $MYMENU == *"MACDHCP"* ]] && fnMacDHCP
+
 
 ################################################################################
 # Disable automatic updates
@@ -1460,6 +1452,7 @@ fnDisableAutoUpdates() {
 
 # Start when module is selected
 [[ $MYMENU == *"DISAUPD"* ]] && fnDisableAutoUpdates
+
 
 ################################################################################
 # Set timezone to Europe/Amsterdam
