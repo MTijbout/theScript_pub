@@ -518,43 +518,56 @@ moduleIPFix() {
 ################################################################################
 
 moduleChangeLang() {
-    printstatus "Change the systems language settings to en_US UTF8 ..."
-    localectl set-locale LANG=en_US.UTF8
-    EXITCODE=$?; fnSucces $EXITCODE
+    printstatus "Change the systems language settings:"
+    LANG_DEF=en_US.UTF8
 
+    printl "- Check if ${LANG_DEF} is already active ..."
+    if localectl | grep -q en_US.UTF8; then
+        printl "  - Language already set to ${LANG_DEF}."
+    else
+        printl "  - Language needs to be set ..."
+        localectl set-locale LANG=${LANG_DEF}
+        EXITCODE=$?; fnSucces $EXITCODE
+    fi
+
+    # Modify the SSH service settings to avoid influence from ssh client
     printl "- Check the SSH server config not to accept settings from client."
     if grep -Fxq "#AcceptEnv LANG LC_*" /etc/ssh/sshd_config
     then
-        printl "/etc/ssh/sshd_config already updated."
+        printl "  - /etc/ssh/sshd_config already updated."
     elif grep -Fxq "AcceptEnv LANG LC_*" /etc/ssh/sshd_config
     then
-        printl "/etc/ssh/sshd_config does need updating."
+        printl "  - Need to update /etc/ssh/sshd_config:"
 
         ## Define the new value
         NEWVALUE="#AcceptEnv LANG LC_*"
 
         ## Replace the current line with the new one in the
-        sed -i "/AcceptEnv/c$NEWVALUE" "/etc/ssh/sshd_config"
-        printl "/etc/ssh/sshd_config is updated."
+        sed -i "/AcceptEnv/c${NEWVALUE}" "/etc/ssh/sshd_config"
+        printl "    - /etc/ssh/sshd_config is updated."
 
     else
-        printl "Not found at all. Add."
+        printl "  - Not found at all. Add."
         NEWVALUE="#AcceptEnv LANG LC_*"
-        echo "$NEWVALUE" >> /etc/ssh/sshd_config
-        printl "The value: $NEWVALUE is added to sshd_config"
+        echo "${NEWVALUE}" >> /etc/ssh/sshd_config
+        printl "    - The value: ${NEWVALUE} is added to sshd_config"
     fi
+
     ## Restart the sshd service.
+    printl "  - Restart the sshd service ..."
     systemctl restart sshd
     if [ $? -eq 0 ]; then
-        printl "sshd service is restarted."
+        printl "    - sshd service is restarted."
     else
-        printl "Could not restart sshd service."
+        printl "    - Could not restart sshd service."
     fi
     ## Have the script reboot at the end.
     REBOOTREQUIRED=1
 
     ## Cleanup variables
     unset NEWVALUE
+    unset LANG_DEF
+    unset EXITCODE
 fi
 }
 
