@@ -103,7 +103,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="0.9s"
-LAST_MODIFICATION="20210304-1535"
+LAST_MODIFICATION="20210304-173717"
 
 ## The user that executed the script.
 USERID=$(logname)
