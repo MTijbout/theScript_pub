@@ -568,7 +568,6 @@ moduleChangeLang() {
     unset NEWVALUE
     unset LANG_DEF
     unset EXITCODE
-fi
 }
 
 # Start when module is selected
