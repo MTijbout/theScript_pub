@@ -107,17 +107,10 @@ LAST_MODIFICATION="20210304-2332"
 
 ## The user that executed the script.
 USERID=$(logname)
-# if [ "$EUID" == 0 ]; then
-#     WORKDIR=/$USERID
-# else
-#     WORKDIR=/home/$USERID
-# fi
 WORKDIR=/home/$USERID
 
 ## Current date and time of script execution
-DATETIME=`date +%Y%m%d_%H%M`
-# `date +%Y-%m-%d_%Hh%Mm`
-# ${DATETIME}
+DATETIME=`date +%Y%m%d_%H%M%S`
 
 SCRIPT_NAME=`basename "$0"`
 ## Log file definition
@@ -131,9 +124,6 @@ printl() {
     echo -e "$1" >> $LOGFILE
 }
 
-# FILE_NAME='echo "$FILE"'
-# printl "File name is: $FILE
-
 ## BEGIN CHECK SCRIPT RUNNING UNDER SUDO
 if [ "$EUID" -ne 0 ]; then
     printl ""
@@ -145,7 +135,6 @@ fi
 ## Get Operating System information.
 . /etc/os-release
 OPSYS=${ID^^}
-# printl "OPSYS: $OPSYS"
 
 ## Get System Architecture
 SYSARCH=$(uname -m)
@@ -222,12 +211,12 @@ shadow=,gray
 
 ## Determine CPU Architecture:
 CPUARCH=$(lscpu | grep Architecture | tr -d ":" | awk '{print $2}')
-#printl "CPU Architecture: $CPUARCH"
+printl "CPU Architecture: $CPUARCH"
 #i686 - 32-bit OS
 
 ## Determine CPU Cores:
 ACTIVECORES=$(grep -c processor /proc/cpuinfo)
-#printl "CPU Cores: $ACTIVECORES"
+printl "CPU Cores: $ACTIVECORES"
 
 ## Determine current IP address:
 MY_IP=$(hostname -I)
@@ -272,7 +261,9 @@ fnMakeBackup() {
     EXITCODE=$?; fnSucces $EXITCODE
 }
 
+# Function to check if a specific package is installed
 fnPackageCheck() {
+    [[ $OPSYS == *"CENTOS"* ]] && return
     printl "  - Check if $1 is installed:"
     sudo dpkg -s $1 > /dev/null
     if [ $? -eq 0 ]; then
@@ -302,7 +293,7 @@ printstatus "Welcome to THE SCRIPT!"
 
 DISTRO=$(/usr/bin/lsb_release -rs)
 CHECK64=$(uname -m)
-printl ""
+
 printl "Script version: ${SCRIPT_VERSION}"
 printl "Last modification: ${LAST_MODIFICATION}"
 printl ""
@@ -312,14 +303,7 @@ printl "OPSYS: $OPSYS"
 printl ""
 
 printstatus "Making sure THE SCRIPT works..."
-
-## Test internet connection.
-## Disable for offline testing purposes. E.g. in VMs and no internet connection.
-#testInternetConnection
-
-## Install required software for functional menu.
-# $PCKMGR $AQUIET $PCK_INST whiptail ccze net-tools curl 2>&1 | tee -a $LOGFILE
-
+# In order the script to work, some packages need to be installed
 fnCheckRequiedPackages() {
     printl "- Check for required packages:"
     REQ_PACKAGES=( whiptail ccze net-tools curl )
@@ -343,15 +327,7 @@ fnCheckRequiedPackages() {
 }
 fnCheckRequiedPackages
 
-# REQ_PACKAGES=( whiptail ccze net-tools curl )
-# for i in "${REQ_PACKAGES[@]}"
-# do
-#     sudo dpkg -s ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
-# done
-
-## Photon
-# tdnf install rpm-build
-
+# To get usefull system information intall lsb-releae
 install_lsb_release() {
     ## install lsb_release if not present.
     if [[ $OPSYS == *"CENTOS"* ]]; then
