@@ -311,10 +311,11 @@ printstatus "Making sure THE SCRIPT works..."
 fnCheckRequiedPackages() {
     printl "- Check for required packages:"
     REQ_PACKAGES=( whiptail ccze net-tools curl )
+    REQ_PACKAGES_COS=( newt epel-release ccze net-tools curl ) # Specific to CentOS
 
     if [[ $OPSYS == *"CENTOS"* ]]; then
         printl "  - OS ${OPSYS} detected ..."
-        for i in "${REQ_PACKAGES[@]}"
+        for i in "${REQ_PACKAGES_COS[@]}"
         do
             printl "  - Checking package ${i}"
             rpm -qa | grep ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
