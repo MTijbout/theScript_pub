@@ -444,7 +444,7 @@ if [[ $MYMENU == "" ]]; then
     exit
 fi
 
-printl "Output Menu selections: ${MYMENU}"
+# printl "Output Menu selections: ${MYMENU}"
 
 ################################################################################
 ##                  - Executing on the selected items -                       ##
@@ -510,9 +510,6 @@ moduleIPFix() {
     unset SUPPORTED_OS
 }
 
-# Start when module is selected
-[[ $MYMENU == *"IP_FIX"* ]] && moduleIPFix
-
 
 ################################################################################
 # Force the system to use en_US as the language.
@@ -571,9 +568,6 @@ moduleChangeLang() {
     unset EXITCODE
 }
 
-# Start when module is selected
-[[ $MYMENU == *"CHANGE_LANG"* ]] && moduleChangeLang
-
 
 ################################################################################
 # Installing RPI-Clone
@@ -597,9 +591,6 @@ fnInstallRpiclone() {
     EXITCODE=$?; fnSucces $EXITCODE
 
 }
-
-# Start when module is selected
-[[ $MYMENU == *"RPI_CLONE"* ]] && fnInstallRpiclone
 
 
 ################################################################################
@@ -676,8 +667,6 @@ moduleCreateSysadmin() {
     fi
 }
 
-# Start when module is selected
-[[ $MYMENU == *"CREATE_SYSADMIN"* ]] && moduleCreateSysadmin
 
 ################################################################################
 # Updating the Host.
@@ -707,9 +696,6 @@ moduleUpdateHost() {
     ## Have the script reboot at the end.
     REBOOTREQUIRED=1
 }
-
-# Start when module is selected
-[[ $MYMENU == *"UPDATE_HOST"* ]] && moduleUpdateHost
 
 
 ################################################################################
@@ -744,9 +730,6 @@ moduleRegenerateSshKeys() {
     ## Have the script reboot at the end.
     REBOOTREQUIRED=1
 }
-
-# Start when module is selected
-[[ $MYMENU == *"REGENERATE_SSH_KEYS"* ]] && moduleRegenerateSshKeys
 
 
 ################################################################################
@@ -783,9 +766,6 @@ moduleShowIp() {
         unset TARGETFILE
     fi
 }
-
-# Start when module is selected
-[[ $MYMENU == *"SHOW_IP"* ]] && moduleShowIp
 
 
 ################################################################################
@@ -848,9 +828,6 @@ moduleHostRename() {
     unset cloudFile
 }
 
-# Start when module is selected
-[[ $MYMENU == *"HOST_RENAME"* ]] && moduleHostRename
-
 
 ################################################################################
 # Apply a more convenient Prompt for the user.
@@ -889,9 +866,6 @@ moduleCustomPrompt () {
     unset NEWPROMPT
 }
 
-# Start when module is selected
-[[ $MYMENU == *"CUSTOM_PROMPT"* ]] && moduleCustomPrompt
-
 
 ################################################################################
 # Add convenience in creating scripts.
@@ -929,9 +903,6 @@ EOF
     unset TARGETFILE
     unset WORKFILE3
 }
-
-# Start when module is selected
-[[ $MYMENU == *"ADD_CSCRIPT"* ]] && moduleAddCscript
 
 
 ################################################################################
@@ -1000,9 +971,6 @@ moduleLocalMirror () {
     unset PATTERN_IN
     unset PATTERN_OUT
 }
-
-# Start when module is selected
-[[ $MYMENU == *"LOCAL_MIRROR"* ]] && moduleLocalMirror
 
 
 ################################################################################
@@ -1078,9 +1046,6 @@ EOF
     unset WORKFILE2
 }
 
-# Start when module is selected
-[[ $MYMENU == *"CUSTOM_ALIAS"* ]] && moduleCustomAlias
-
 
 ################################################################################
 # Fill .vimrc with settings
@@ -1103,10 +1068,6 @@ moduleVimrc() {
 # EOF
 
 
-# Start when module is selected
-[[ $MYMENU == *"VIMRC"* ]] && moduleVimrc
-
-
 ################################################################################
 # Remove the need to type a password when using sudo.
 ################################################################################
@@ -1125,9 +1086,6 @@ moduleNoPassSudo() {
         chmod 0440 /etc/sudoers.d/010_$USERID-nopasswd
     fi
 }
-
-# Start when module is selected
-[[ $MYMENU == *"NO_PASS_SUDO"* ]] && moduleNoPassSudo
 
 
 ################################################################################
@@ -1279,9 +1237,6 @@ moduleLog2RAM() {
     unset GIT_INSTALL_SUCCES
 }
 
-# Start when module is selected
-[[ $MYMENU == *"log2ram"* ]] && moduleLog2RAM
-
 
 ################################################################################
 # Configure to use the MAC address for DHCP.
@@ -1430,9 +1385,6 @@ fnMacDHCP() {
     unset CONF_CHANGE_SUCCES
 }
 
-# Start when module is selected
-[[ $MYMENU == *"MACDHCP"* ]] && fnMacDHCP
-
 
 ################################################################################
 # Disable automatic updates
@@ -1479,9 +1431,6 @@ fnDisableAutoUpdates() {
     sudo sed -i '+s+'"${OLDVAL}"'+'"${NEWVAL}"'+' ${CONF_FILE}
 }
 
-# Start when module is selected
-[[ $MYMENU == *"DISAUPD"* ]] && fnDisableAutoUpdates
-
 
 ################################################################################
 # Set timezone to Europe/Amsterdam
@@ -1497,9 +1446,6 @@ fnSetTimezone() {
     printl "  - Set the timezone to ${TIMEZONE}"
     sudo timedatectl set-timezone ${TIMEZONE}
 }
-
-# Start when module is selected
-[[ $MYMENU == *"TZADAM"* ]] && fnSetTimezone
 
 
 ################################################################################
