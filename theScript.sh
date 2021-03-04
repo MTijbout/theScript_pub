@@ -1121,7 +1121,7 @@ moduleNoPassSudo() {
 }
 
 # Start when module is selected
-[[ $MYMENU == *"NO_PASS_SUDO"* ]] &&moduleNoPassSudo
+[[ $MYMENU == *"NO_PASS_SUDO"* ]] && moduleNoPassSudo
 
 
 ################################################################################
