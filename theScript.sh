@@ -323,6 +323,7 @@ fnCheckRequiedPackages() {
         printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES[@]}"
         do
+            printl "  - Checking package ${i}"
             sudo dpkg -s ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
         done
     fi
