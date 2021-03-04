@@ -103,7 +103,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="0.9s"
-LAST_MODIFICATION="20210304-1804"
+LAST_MODIFICATION="20210304-1827"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -1506,6 +1506,11 @@ fnSetTimezone() {
 ## Testing with Case to evaluate and order activity
 ################################################################################
 
+IFS='" "' read -r -a array <<< "${MYMENU}"
+for element in "${array[@]}"
+do
+    echo "$element"
+done
 
 echo -e "\nWorking on element ${MYMENU}"
 case ${MYMENU} in
