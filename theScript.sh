@@ -300,6 +300,17 @@ fnPackageCheck() {
 
 printstatus "Welcome to THE SCRIPT!"
 
+DISTRO=$(/usr/bin/lsb_release -rs)
+CHECK64=$(uname -m)
+printl ""
+printl "Script version: ${SCRIPT_VERSION}"
+printl "Last modification: ${LAST_MODIFICATION}"
+printl ""
+printl "DISTRO: $DISTRO"
+printl "CHECK64: $CHECK64"
+printl "OPSYS: $OPSYS"
+printl ""
+
 printstatus "Making sure THE SCRIPT works..."
 
 ## Test internet connection.
@@ -353,16 +364,6 @@ install_lsb_release() {
 }
 install_lsb_release
 
-DISTRO=$(/usr/bin/lsb_release -rs)
-CHECK64=$(uname -m)
-printl ""
-printl "Script version: ${SCRIPT_VERSION}"
-printl "Last modification: ${LAST_MODIFICATION}"
-printl ""
-printl "DISTRO: $DISTRO"
-printl "CHECK64: $CHECK64"
-printl "OPSYS: $OPSYS"
-printl ""
 
 ################################################################################
 ## Main Menu Definition
