@@ -1437,9 +1437,12 @@ ARRAY=($CONVERSION)
 # Evaluate all elements in the array:
 for ELEMENT in "${ARRAY[@]}"
 do
-    echo -e "\n- Processing: ${ELEMENT}"
+    # echo -e "\n- Processing: ${ELEMENT}"
     case ${ELEMENT} in
     # Main Menu
+    QUIET               ) printl "" ;;
+    CUST_OPS            ) printl "" ;;
+    SEC_OPS             ) printl "" ;;
     log2ram             ) moduleLog2RAM ;;
 
     # Customization options
