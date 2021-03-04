@@ -286,7 +286,7 @@ fnPackageCheck() {
         if [ $? -eq 0 ]; then
             printl "    - Package $1 installed sucessfully."
             PKG_INSTALL_SUCCES="true"
-        else 
+        else
             printl "    - Package $1 did not install sucessfully."
             PKG_INSTALL_SUCCES="false"
             return ## Exit function on failure.
@@ -1509,7 +1509,7 @@ fnSetTimezone() {
 
 for element in "${MYMENU[@]}"; do
     case ${element} in
-      "CHANGE_LANG"                ) printl "Option CHANGE_LANG was selected";;
+      CHANGE_LANG                ) printl "Option CHANGE_LANG was selected";;
 
     1)
         echo "Hello"
