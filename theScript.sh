@@ -103,7 +103,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="0.9s"
-LAST_MODIFICATION="20210304-1827"
+LAST_MODIFICATION="20210304-1833"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -1510,32 +1510,55 @@ IFS='" "' read -r -a array <<< "${MYMENU}"
 for element in "${array[@]}"
 do
     echo "$element"
+    case ${element} in
+    *"CHANGE_LANG"*)
+        printl "Option CHANGE_LANG was selected"
+        ;;
+    *"CUST_OPS"*)
+        printl "Option CUST_OPS was selected"
+        ;;
+    1)
+        echo "Hello"
+        ;;
+
+    2)
+        echo "call"
+        ;;
+
+    3)
+        echo "bye"
+        ;;
+
+    *)
+        echo "Unknown - ${MYMENU}"
+        ;;
+    esac
 done
 
-echo -e "\nWorking on element ${MYMENU}"
-case ${MYMENU} in
-*"CHANGE_LANG"*)
-    printl "Option CHANGE_LANG was selected"
-    ;;
-*"CUST_OPS"*)
-    printl "Option CUST_OPS was selected"
-    ;;
-1)
-    echo "Hello"
-    ;;
+# echo -e "\nWorking on element ${MYMENU}"
+# case ${MYMENU} in
+# *"CHANGE_LANG"*)
+#     printl "Option CHANGE_LANG was selected"
+#     ;;
+# *"CUST_OPS"*)
+#     printl "Option CUST_OPS was selected"
+#     ;;
+# 1)
+#     echo "Hello"
+#     ;;
 
-2)
-    echo "call"
-    ;;
+# 2)
+#     echo "call"
+#     ;;
 
-3)
-    echo "bye"
-    ;;
+# 3)
+#     echo "bye"
+#     ;;
 
-*)
-    echo "Unknown - ${MYMENU}"
-    ;;
-esac
+# *)
+#     echo "Unknown - ${MYMENU}"
+#     ;;
+# esac
 
 
 
