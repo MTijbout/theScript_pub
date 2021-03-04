@@ -313,12 +313,14 @@ fnCheckRequiedPackages() {
     REQ_PACKAGES=( whiptail ccze net-tools curl )
 
     if [[ $OPSYS == *"CENTOS"* ]]; then
+        printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES[@]}"
         do
             printl "  - Checking package ${i}"
             rpm -qa | grep ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
         done
     else
+        printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES[@]}"
         do
             sudo dpkg -s ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
