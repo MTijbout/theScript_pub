@@ -354,9 +354,12 @@ install_lsb_release
 
 DISTRO=$(/usr/bin/lsb_release -rs)
 CHECK64=$(uname -m)
+printl ""
 printl "DISTRO: $DISTRO"
 printl "CHECK64: $CHECK64"
 printl "OPSYS: $OPSYS"
+printl ""
+printl "Last modification: 20210304-153300"
 printl ""
 
 ################################################################################
