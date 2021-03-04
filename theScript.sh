@@ -1508,6 +1508,7 @@ fnSetTimezone() {
 #$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
 
 for element in "${MYMENU[@]}"; do
+    echo -e "\nWorking on element ${element}"
     case ${element} in
       *CHANGE_LANG*                ) printl "Option CHANGE_LANG was selected";;
 
