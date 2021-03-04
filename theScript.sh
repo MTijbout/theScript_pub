@@ -1506,8 +1506,8 @@ fnSetTimezone() {
 ## Testing with Case to evaluate and order activity
 ################################################################################
 
-# IFS='" "' read -r -a array <<< "${MYMENU}"
-array=(${MYMENU//" "/ })
+IFS='" "' read -r -a array <<< "${MYMENU}"
+# array=(${MYMENU//" "/ })
 for element in "${array[@]}"
 do
     echo -e "\n Processing: $element"
@@ -1535,57 +1535,6 @@ do
         ;;
     esac
 done
-
-# echo -e "\nWorking on element ${MYMENU}"
-# case ${MYMENU} in
-# *"CHANGE_LANG"*)
-#     printl "Option CHANGE_LANG was selected"
-#     ;;
-# *"CUST_OPS"*)
-#     printl "Option CUST_OPS was selected"
-#     ;;
-# 1)
-#     echo "Hello"
-#     ;;
-
-# 2)
-#     echo "call"
-#     ;;
-
-# 3)
-#     echo "bye"
-#     ;;
-
-# *)
-#     echo "Unknown - ${MYMENU}"
-#     ;;
-# esac
-
-
-
-# for element in "${MYMENU[@]}"; do
-#     echo -e "\nWorking on element ${element}"
-#     case ${element} in
-#     CHANGE_LANG)
-#         printl "Option CHANGE_LANG was selected"
-#         ;;
-#     1)
-#         echo "Hello"
-#         ;;
-
-#     2)
-#         echo "call"
-#         ;;
-
-#     3)
-#         echo "bye"
-#         ;;
-
-#     *)
-#         echo "Unknown - ${element}"
-#         ;;
-#     esac
-# done
 
 
 ################################################################################
