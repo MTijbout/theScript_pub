@@ -1506,10 +1506,14 @@ fnSetTimezone() {
 ## Testing with Case to evaluate and order activity
 ################################################################################
 
+
 echo -e "\nWorking on element ${MYMENU}"
 case ${MYMENU} in
 *"CHANGE_LANG"*)
     printl "Option CHANGE_LANG was selected"
+    ;;
+*"CUST_OPS"*)
+    printl "Option CUST_OPS was selected"
     ;;
 1)
     echo "Hello"
