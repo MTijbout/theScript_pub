@@ -1507,6 +1507,35 @@ fnSetTimezone() {
 #rm -rf /var/cache/apt/archives/apt-fast
 #$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
 
+for element in "${MYMENU[@]}"; do
+    case ${element} in
+      "CHANGE_LANG"                ) printl "Option CHANGE_LANG was selected";;
+
+    1)
+        echo "Hello"
+        ;;
+
+    2)
+        echo "call"
+        ;;
+
+    3)
+        echo "bye"
+        ;;
+
+    *)
+        echo "Unknown"
+        ;;
+    esac
+done
+
+
+################################################################################
+## Some cleanup at the end...
+################################################################################
+#rm -rf /var/cache/apt/archives/apt-fast
+#$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
+
 printstatus "All done."
 printf "${BIGreen}== ${BIYELLOW}When complete, remove the script from the /home/$USERID directory.\r\n" >> $LOGFILE
 printf "${BIGreen}==\r\n" >> $LOGFILE
