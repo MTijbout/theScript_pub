@@ -1626,6 +1626,7 @@ if [[ $REBOOTREQUIRED == *"1"* ]]; then
     fi
 else
     echo ""
+    whiptail --title "Script Finished" --msgbox "ALL DONE\nNo reboot required. But will not harm by doing." 8 78
     printl "ALL DONE - No reboot required. But will not harm by doing."
     echo ""
 fi
