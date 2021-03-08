@@ -103,7 +103,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="20210308-1200"
-LAST_MODIFICATION="20210308-120700"
+LAST_MODIFICATION="20210308-121000"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -554,7 +554,7 @@ fnDoReplaceLine() {
     printl "- Make changes to ${TARGETFILE} ..."
     printl "- Old value: ${PATTERN_IN}"
     printl "- New value: ${PATTERN_OUT}"
-    sed -i 's|'*${PATTERN_IN}.*'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+    sed -i 's|'*${PATTERN_IN}*'|'${PATTERN_OUT}'|g' ${TARGETFILE}
     EXITCODE=$?; fnSucces $EXITCODE
 }
 
@@ -582,12 +582,12 @@ moduleSshAliveInterval() {
     fnDoReplaceLine # Call function to replace the line with the new values.
 
     ## Restart the sshd service.
-    printl "  - Restart the sshd service ..."
+    printl "- Restart the sshd service ..."
     systemctl restart sshd
     if [ $? -eq 0 ]; then
-        printl "    - sshd service is restarted."
+        printl "  - sshd service is restarted."
     else
-        printl "    - Could not restart sshd service."
+        printl "  - Could not restart sshd service."
     fi
     ## Have the script reboot at the end.
     REBOOTREQUIRED=1
