@@ -346,7 +346,7 @@ fnDoReplace() {
     ## Search for input pattern and replace by output pattern
     printl "Make changes to ${TARGETFILE} ..."
     printl "New mirror: ${PATTERN_OUT}"
-    sed -i 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+    sed -i 's|'"${PATTERN_IN}"'|'"${PATTERN_OUT}"'|g' ${TARGETFILE}
     EXITCODE=$?; fnSucces $EXITCODE
 }
 
