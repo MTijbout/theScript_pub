@@ -5,7 +5,7 @@
 # Date last update: 2021-03-04
 # Author: Marco Tijbout
 #
-# Version: 20210308-0900
+# Version: 20210308
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -26,6 +26,8 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 20210308 Marco Tijbout:
+#   SSH_ALIVE_INTERVAL - New module to set SSH client alive interval
 # 0.9s Marco Tijbout:
 #   MACDHCP consider more possible configurations for ubuntu
 #   DISAUPD - New module to disable automatic updates on ubuntu
@@ -102,8 +104,8 @@
 clear
 
 ## Version of theScript.sh
-SCRIPT_VERSION="20210308-1200"
-LAST_MODIFICATION="20210308-121000"
+SCRIPT_VERSION="20210308"
+LAST_MODIFICATION="20210308-141615"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -350,7 +352,7 @@ main_menu1() {
         "\nSelect items as required then hit OK " 25 75 16 \
         "QUIET" "Quiet(er) install - untick for lots of info " OFF \
         "CUST_OPS" "Menu - Customization options " OFF \
-        "SEC_OPS" "Menu - Options for securing the system " OFF \
+        "SEC_OPS" "Menu - Options for securing the system " ON \
         "log2ram" "Install Log2RAM with custom capacity " OFF \
         3>&1 1>&2 2>&3)
 printl "Output MainMenu1: $MMENU1"
@@ -389,7 +391,7 @@ sub_menu2() {
         "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
         "REGENERATE_SSH_KEYS" "Regenerate the SSH host keys " OFF \
         "HOST_RENAME" "Rename the HOST " OFF \
-        "SSH_ALIVE_INTERVAL" "Enable SSH Alive interval" OFF \
+        "SSH_ALIVE_INTERVAL" "Enable SSH Alive interval" ON \
         3>&1 1>&2 2>&3)
 printl "Output SubMenu2: $SMENU2"
 MYMENU="$MYMENU $SMENU2"
@@ -552,9 +554,8 @@ moduleChangeLang() {
 fnDoReplaceLine() {
     ## Search for input pattern and replace by output pattern
     printl "- Make changes to ${TARGETFILE} ..."
-    printl "- Old value: ${PATTERN_IN}"
-    printl "- New value: ${PATTERN_OUT}"
-    sed -i 's|'*${PATTERN_IN}*'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+    printl "  - New value: ${PATTERN_OUT}"
+    sed -i 's|'.*"${PATTERN_IN}".*'|'"${PATTERN_OUT}"'|g' ${TARGETFILE}
     EXITCODE=$?; fnSucces $EXITCODE
 }
 
@@ -590,7 +591,7 @@ moduleSshAliveInterval() {
         printl "  - Could not restart sshd service."
     fi
     ## Have the script reboot at the end.
-    REBOOTREQUIRED=1
+    # REBOOTREQUIRED=1
 
     ## Cleanup variables
     unset SSHALIVEINT
