@@ -2,7 +2,7 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 27/apr/19
-# Date last update: 2021-03-04
+# Date last update: 2021-03-08
 # Author: Marco Tijbout
 #
 # Version: 20210308
@@ -223,6 +223,10 @@ printl "CPU Cores: $ACTIVECORES"
 ## Determine current IP address:
 MY_IP=$(hostname -I)
 
+################################################################################
+## MAIN SECTION OF SCRIPT
+################################################################################
+
 printstatus() {
     # h=$(($SECONDS/3600));
     # m=$((($SECONDS/60)%60));
@@ -234,62 +238,6 @@ printstatus() {
     printl "$1"
     printl ""
 }
-
-## Test internet connection.
-testInternetConnection() {
-    chmod u+s /bin/ping
-    if [[ "$(ping -c 1 23.1.68.60  | grep '100%' )" != "" ]]; then
-        printl "${IRed} No internet connection available, aborting! ${IWhite}\r\n"
-        exit 0
-    fi
-}
-
-# Function to display success or failure of command
-fnSucces() {
-    if [ $EXITCODE -eq 0 ]; then
-        printl "  - Succesful."
-    else
-        printl "  - Failed!"
-        # Consider exiting.
-        printl "  - Exitcode: $EXITCODE"
-        # exit $EXITCODE
-    fi
-}
-
-# Function to make backups of files
-fnMakeBackup() {
-    printl "- Make backup of $1"
-    sudo cp "${1}" "${1}".bak-${DATETIME}
-    EXITCODE=$?; fnSucces $EXITCODE
-}
-
-# Function to check if a specific package is installed
-fnPackageCheck() {
-    [[ $OPSYS == *"CENTOS"* ]] && return
-    printl "  - Check if $1 is installed:"
-    sudo dpkg -s $1 > /dev/null
-    if [ $? -eq 0 ]; then
-        printl "    - Package $1 is installed."
-        PKG_INSTALLED="true"
-    else
-        printl "    - Package $1 is not installed. Install."
-        PKG_INSTALLED="false"
-        $PCKMGR $AQUIET $PCK_INST $1 2>&1 | tee -a $LOGFILE
-        ## Check and log success.
-        if [ $? -eq 0 ]; then
-            printl "    - Package $1 installed sucessfully."
-            PKG_INSTALL_SUCCES="true"
-        else
-            printl "    - Package $1 did not install sucessfully."
-            PKG_INSTALL_SUCCES="false"
-            return ## Exit function on failure.
-        fi
-    fi
-}
-
-################################################################################
-## MAIN SECTION OF SCRIPT
-################################################################################
 
 printstatus "Welcome to THE SCRIPT!"
 
@@ -341,6 +289,76 @@ install_lsb_release() {
     [ ! -x /usr/bin/lsb_release ] && $PCKMGR $AQUIET $PCK_INST $LSB_PACKAGE 2>&1 | tee -a $LOGFILE
 }
 install_lsb_release
+
+# Test internet connection.
+testInternetConnection() {
+    chmod u+s /bin/ping
+    if [[ "$(ping -c 1 23.1.68.60  | grep '100%' )" != "" ]]; then
+        printl "${IRed} No internet connection available, aborting! ${IWhite}\r\n"
+        exit 0
+    fi
+}
+
+# Function to display success or failure of command
+fnSucces() {
+    if [ $EXITCODE -eq 0 ]; then
+        printl "  - Succesful."
+    else
+        printl "  - Failed!"
+        # Consider exiting.
+        printl "  - Exitcode: $EXITCODE"
+        # exit $EXITCODE
+    fi
+}
+
+# Function to make backups of files
+fnMakeBackup() {
+    printl "- Make backup of $1"
+    sudo cp "${1}" "${1}".bak-${DATETIME}
+    EXITCODE=$?; fnSucces $EXITCODE
+}
+
+# Function to check if a specific package is installed
+fnPackageCheck() {
+    [[ $OPSYS == *"CENTOS"* ]] && return
+    printl "  - Check if $1 is installed:"
+    sudo dpkg -s $1 > /dev/null
+    if [ $? -eq 0 ]; then
+        printl "    - Package $1 is installed."
+        PKG_INSTALLED="true"
+    else
+        printl "    - Package $1 is not installed. Install."
+        PKG_INSTALLED="false"
+        $PCKMGR $AQUIET $PCK_INST $1 2>&1 | tee -a $LOGFILE
+        ## Check and log success.
+        if [ $? -eq 0 ]; then
+            printl "    - Package $1 installed sucessfully."
+            PKG_INSTALL_SUCCES="true"
+        else
+            printl "    - Package $1 did not install sucessfully."
+            PKG_INSTALL_SUCCES="false"
+            return ## Exit function on failure.
+        fi
+    fi
+}
+
+fnDoReplace() {
+    ## Search for input pattern and replace by output pattern
+    printl "Make changes to ${TARGETFILE} ..."
+    printl "New mirror: ${PATTERN_OUT}"
+    sed -i 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+    EXITCODE=$?; fnSucces $EXITCODE
+}
+
+fnDoReplaceLine() {
+    ## Search for input pattern and replace by output pattern
+    # Search for pattern and replace the whole line.
+    printl "- Make changes to ${TARGETFILE} ..."
+    printl "  - New value: ${PATTERN_OUT}"
+    sed -i 's|'.*"${PATTERN_IN}".*'|'"${PATTERN_OUT}"'|g' ${TARGETFILE}
+    EXITCODE=$?; fnSucces $EXITCODE
+    printl ""
+}
 
 
 ################################################################################
@@ -550,16 +568,6 @@ moduleChangeLang() {
 ################################################################################
 # SSH_ALIVE_INTERVAL - Enable alive interval on SSH
 ################################################################################
-
-fnDoReplaceLine() {
-    ## Search for input pattern and replace by output pattern
-    printl "- Make changes to ${TARGETFILE} ..."
-    printl "  - New value: ${PATTERN_OUT}"
-    sed -i 's|'.*"${PATTERN_IN}".*'|'"${PATTERN_OUT}"'|g' ${TARGETFILE}
-    EXITCODE=$?; fnSucces $EXITCODE
-}
-
-# sed 's/.*TEXT_TO_BE_REPLACED.*/This line is removed by the admin./'
 
 moduleSshAliveInterval() {
     printstatus "Enable SSH alive interval:"
@@ -957,17 +965,6 @@ fnFindStringInFile() {
     fi
 }
 
-fnDoReplace() {
-    # Make backup first ...
-    fnMakeBackup ${TARGETFILE}
-
-    ## Search for input pattern and replace by output pattern
-    printl "Make changes to ${TARGETFILE} ..."
-    printl "New mirror: ${PATTERN_OUT}"
-    sed -i 's|'${PATTERN_IN}'|'${PATTERN_OUT}'|g' ${TARGETFILE}
-    EXITCODE=$?; fnSucces $EXITCODE
-}
-
 ## Module Logic
 moduleLocalMirror () {
     printstatus "Change the apt mirror to a local one..."
@@ -975,10 +972,14 @@ moduleLocalMirror () {
     ## Check if this is Raspbian
     if [[ $OPSYS == *"RASPBIAN"* ]]; then
         printl "Raspberry Pi OS detected..."
+
         ## Prepare settings as variables
         TARGETFILE="/etc/apt/sources.list"
         PATTERN_IN="http://raspbian.raspberrypi.org/raspbian/"
         PATTERN_OUT="http://mirror.nl.leaseweb.net/raspbian/raspbian"
+
+        # Make backup first ...
+        fnMakeBackup ${TARGETFILE}
 
         # Check if already has the configuration
         fnFindStringInFile
@@ -990,6 +991,9 @@ moduleLocalMirror () {
         TARGETFILE="/etc/apt/sources.list"
         PATTERN_IN="http://ports.ubuntu.com/ubuntu-ports"
         PATTERN_OUT="http://ftp.tu-chemnitz.de/pub/linux/ubuntu-ports"
+
+        # Make backup first ...
+        fnMakeBackup ${TARGETFILE}
 
         # Check if already has the configuration
         fnFindStringInFile
