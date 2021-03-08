@@ -554,7 +554,7 @@ fnDoReplaceLine() {
     printl "- Make changes to ${TARGETFILE} ..."
     printl "- Old value: ${PATTERN_IN}"
     printl "- New value: ${PATTERN_OUT}"
-    sed -i 's|'.*${PATTERN_IN}.*'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+    sed -i 's|'*${PATTERN_IN}.*'|'${PATTERN_OUT}'|g' ${TARGETFILE}
     EXITCODE=$?; fnSucces $EXITCODE
 }
 
