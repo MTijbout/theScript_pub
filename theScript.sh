@@ -360,6 +360,11 @@ fnDoReplaceLine() {
     printl ""
 }
 
+fnYesNo() {
+    # Show dialog that is answered with YES or NO. $1 is title and $2 is question to ask.
+    FN_ANSWER=$(whiptail --title "${1}" --yesno --defaultno "${2}" 0 0 3>&1 1>&2 2>&3; echo $?)
+    # echo "Answer:  ${FN_ANSWER}"
+}
 
 ################################################################################
 ## Main Menu Definition
@@ -409,7 +414,8 @@ sub_menu2() {
         "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
         "REGENERATE_SSH_KEYS" "Regenerate the SSH host keys " OFF \
         "HOST_RENAME" "Rename the HOST " OFF \
-        "SSH_ALIVE_INTERVAL" "Enable SSH Alive interval" ON \
+        "SSH_ALIVE_INTERVAL" "Enable SSH Alive interval" OFF \
+        "SSH_NO_PASSWORD" "Disable login with password on SSH" ON \
         3>&1 1>&2 2>&3)
 printl "Output SubMenu2: $SMENU2"
 MYMENU="$MYMENU $SMENU2"
@@ -565,6 +571,7 @@ moduleChangeLang() {
     unset EXITCODE
 }
 
+
 ################################################################################
 # SSH_ALIVE_INTERVAL - Enable alive interval on SSH
 ################################################################################
@@ -608,6 +615,63 @@ moduleSshAliveInterval() {
     unset PATTERN_IN
     unset PATTERN_OUT
 }
+
+
+################################################################################
+# SSH_NO_PASSWORD - Enable alive interval on SSH
+################################################################################
+
+moduleSshNoPassword() {
+    printstatus "Enable or Disable password login with password to SSH:"
+    TARGETFILE="/etc/ssh/sshd_config"
+
+    # Check if $USERID has a psk installed.
+    [ -s "${WORKDIR}/.ssh/authorized_keys" ]
+    if [ $? -eq 0 ]; then
+        printl "  - The file for ${USERID} authorized_keys has content. Continue."
+    else
+        printl "  - The file for ${USERID} authorized_keys has NO content. Abort."
+        return 0
+    fi
+    # Make backup first ...
+    fnMakeBackup ${TARGETFILE}
+
+    # Ask user input to enable (=YES) or disable (=NO)
+    fnYesNo  'SSH Password authentication' 'SSH password authentication enabled?'
+
+    if [ ${FN_ANSWER} -eq 0 ]; then
+        printl "- Enable password authentication"
+        # sed -i 's|[#]*PasswordAuthentication no|PasswordAuthentication yes|g' /etc/ssh/sshd_config
+        PATTERN_IN='[#]*PasswordAuthentication no'
+        PATTERN_OUT='PasswordAuthentication yes'
+        fnDoReplaceLine # Call function to replace the line with the new values.
+    else
+        printl "- Disable password authentication"
+        # sed -i 's|[#]*PasswordAuthentication yes|PasswordAuthentication no|g' /etc/ssh/sshd_config
+        PATTERN_IN='[#]*PasswordAuthentication yes'
+        PATTERN_OUT='PasswordAuthentication no'
+        fnDoReplaceLine # Call function to replace the line with the new values.
+    fi
+
+    ## Restart the sshd service.
+    printl "- Restart the sshd service ..."
+    systemctl restart sshd
+    if [ $? -eq 0 ]; then
+        printl "  - sshd service is restarted."
+    else
+        printl "  - Could not restart sshd service."
+    fi
+    ## Have the script reboot at the end.
+    # REBOOTREQUIRED=1
+
+    ## Cleanup variables
+    unset FN_ANSWER
+    unset TARGETFILE
+    unset EXITCODE
+    unset PATTERN_IN
+    unset PATTERN_OUT
+}
+
 
 ################################################################################
 # Installing RPI-Clone
@@ -1526,6 +1590,7 @@ do
     REGENERATE_SSH_KEYS ) moduleRegenerateSshKeys ;;
     HOST_RENAME         ) moduleHostRename ;;
     SSH_ALIVE_INTERVAL  ) moduleSshAliveInterval ;;
+    SSH_NO_PASSWORD     ) moduleSshNoPassword ;;
 
     *)
         printl "Not sure what happened here. Do not know what to do with: ${ELEMENT}"
