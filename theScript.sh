@@ -5,7 +5,7 @@
 # Date last update: 2021-03-04
 # Author: Marco Tijbout
 #
-# Version 0.9t
+# Version: 20210308-0900
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -102,8 +102,8 @@
 clear
 
 ## Version of theScript.sh
-SCRIPT_VERSION="0.9t"
-LAST_MODIFICATION="20210304-2332"
+SCRIPT_VERSION="20210308-0900"
+LAST_MODIFICATION="20210308-090237"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -389,6 +389,7 @@ sub_menu2() {
         "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
         "REGENERATE_SSH_KEYS" "Regenerate the SSH host keys " OFF \
         "HOST_RENAME" "Rename the HOST " OFF \
+        "SSH_ALIVE_INTERVAL" "Enable SSH Alive interval" OFF \
         3>&1 1>&2 2>&3)
 printl "Output SubMenu2: $SMENU2"
 MYMENU="$MYMENU $SMENU2"
@@ -544,6 +545,60 @@ moduleChangeLang() {
     unset EXITCODE
 }
 
+################################################################################
+# SSH_ALIVE_INTERVAL - Enable alive interval on SSH
+################################################################################
+
+fnDoReplaceLine() {
+    ## Search for input pattern and replace by output pattern
+    printl "- Make changes to ${TARGETFILE} ..."
+    printl "- Old value: ${PATTERN_IN}"
+    printl "- New value: ${PATTERN_OUT}"
+    sed -i 's|'.*${PATTERN_IN}.*'|'${PATTERN_OUT}'|g' ${TARGETFILE}
+    EXITCODE=$?; fnSucces $EXITCODE
+}
+
+# sed 's/.*TEXT_TO_BE_REPLACED.*/This line is removed by the admin./'
+
+moduleSshAliveInterval() {
+    printstatus "Enable SSH alive interval:"
+    TARGETFILE="/etc/ssh/sshd_config"
+
+    # Make backup first ...
+    fnMakeBackup ${TARGETFILE}
+
+    # Ask user input for value. Default 1800 seconds = 30 minutes.
+    SSHALIVEINT=1800
+    SSHALIVEINT=$(whiptail --inputbox "\nProvide new value in seconds:\n" --title "SSH Client Alive Interval" 8 60 $SSHALIVEINT 3>&1 1>&2 2>&3)
+
+    # First value
+    PATTERN_IN="ClientAliveInterval"
+    PATTERN_OUT="ClientAliveInterval ${SSHALIVEINT}"
+    fnDoReplaceLine # Call function to replace the line with the new values.
+
+    # Second value
+    PATTERN_IN="ClientAliveCountMax"
+    PATTERN_OUT="ClientAliveCountMax 0"
+    fnDoReplaceLine # Call function to replace the line with the new values.
+
+    ## Restart the sshd service.
+    printl "  - Restart the sshd service ..."
+    systemctl restart sshd
+    if [ $? -eq 0 ]; then
+        printl "    - sshd service is restarted."
+    else
+        printl "    - Could not restart sshd service."
+    fi
+    ## Have the script reboot at the end.
+    REBOOTREQUIRED=1
+
+    ## Cleanup variables
+    unset SSHALIVEINT
+    unset TARGETFILE
+    unset EXITCODE
+    unset PATTERN_IN
+    unset PATTERN_OUT
+}
 
 ################################################################################
 # Installing RPI-Clone
@@ -1465,6 +1520,7 @@ do
     NO_PASS_SUDO        ) moduleNoPassSudo ;;
     REGENERATE_SSH_KEYS ) moduleRegenerateSshKeys ;;
     HOST_RENAME         ) moduleHostRename ;;
+    SSH_ALIVE_INTERVAL  ) moduleSshAliveInterval ;;
 
     *)
         printl "Not sure what happened here. Do not know what to do with: ${ELEMENT}"
