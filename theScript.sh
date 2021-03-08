@@ -27,6 +27,7 @@
 #
 # Version history:
 # 20210308 Marco Tijbout:
+#   Introducing new version numbering. Changed to use the date
 #   SSH_ALIVE_INTERVAL - New module to set SSH client alive interval
 # 0.9s Marco Tijbout:
 #   MACDHCP consider more possible configurations for ubuntu
@@ -105,7 +106,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="20210308"
-LAST_MODIFICATION="20210308-141615"
+LAST_MODIFICATION="20210308-161937"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -313,7 +314,7 @@ fnSucces() {
 
 # Function to make backups of files
 fnMakeBackup() {
-    printl "- Make backup of $1"
+    printl "  - Make backup of $1"
     sudo cp "${1}" "${1}".bak-${DATETIME}
     EXITCODE=$?; fnSucces $EXITCODE
 }
@@ -344,8 +345,8 @@ fnPackageCheck() {
 
 fnDoReplace() {
     ## Search for input pattern and replace by output pattern
-    printl "Make changes to ${TARGETFILE} ..."
-    printl "New mirror: ${PATTERN_OUT}"
+    printl "  - Make changes to ${TARGETFILE} ..."
+    printl "  - New vaule: ${PATTERN_OUT}"
     sed -i 's|'"${PATTERN_IN}"'|'"${PATTERN_OUT}"'|g' ${TARGETFILE}
     EXITCODE=$?; fnSucces $EXITCODE
 }
@@ -353,7 +354,7 @@ fnDoReplace() {
 fnDoReplaceLine() {
     ## Search for input pattern and replace by output pattern
     # Search for pattern and replace the whole line.
-    printl "- Make changes to ${TARGETFILE} ..."
+    printl "  - Make changes to ${TARGETFILE} ..."
     printl "  - New value: ${PATTERN_OUT}"
     sed -i 's|'.*"${PATTERN_IN}".*'|'"${PATTERN_OUT}"'|g' ${TARGETFILE}
     EXITCODE=$?; fnSucces $EXITCODE
