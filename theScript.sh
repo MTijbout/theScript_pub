@@ -113,9 +113,9 @@ USERID=$(logname)
 WORKDIR=/home/$USERID
 
 ## Current date and time of script execution
-DATETIME=`date +%Y%m%d_%H%M%S`
+DATETIME=$(date +%Y%m%d_%H%M%S)
 
-SCRIPT_NAME=`basename "$0"`
+SCRIPT_NAME=$(basename "$0")
 ## Log file definition
 LOGFILE=${WORKDIR}/${SCRIPT_NAME}-${DATETIME}.log
 touch $LOGFILE
@@ -124,7 +124,7 @@ chown $USERID:$USERID $LOGFILE
 ## Logging and ECHO functionality combined.
 printl() {
     printf "\n%s" "$1"
-    echo -e "$1" >> $LOGFILE
+    echo -e "$1" >>$LOGFILE
 }
 
 ## BEGIN CHECK SCRIPT RUNNING UNDER SUDO
@@ -144,14 +144,15 @@ SYSARCH=$(uname -m)
 SYSARCH=${SYSARCH^^}
 
 ## If the OS is exotic, exit.
-if  [[ $OPSYS != *"ARCH"* ]] && \
-    [[ $OPSYS != *"PHOTON"* ]] && \
-    [[ $OPSYS != *"RASPBIAN"* ]] && \
-    [[ $OPSYS != *"DEBIAN"* ]] && \
-    [[ $OPSYS != *"UBUNTU"* ]] && \
-    [[ $OPSYS != *"CENTOS"* ]] && \
+if [[ $OPSYS != *"ARCH"* ]] &&
+    [[ $OPSYS != *"PHOTON"* ]] &&
+    [[ $OPSYS != *"RASPBIAN"* ]] &&
+    [[ $OPSYS != *"DEBIAN"* ]] &&
+    [[ $OPSYS != *"UBUNTU"* ]] &&
+    [[ $OPSYS != *"CENTOS"* ]] &&
     [[ $OPSYS != *"DIETPI"* ]]; then
-    printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"; exit
+    printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"
+    exit
 fi
 
 ## Check for OS that uses other update mechanisms.
@@ -160,12 +161,12 @@ if [[ $OPSYS == *"CENTOS"* ]]; then
     PCK_INST="install -y"
     AQUIET="--quiet"
     NQUIET="-s"
-    elif [[ $OPSYS == *"PHOTON"* ]]; then
+elif [[ $OPSYS == *"PHOTON"* ]]; then
     PCKMGR="tdnf"
     PCK_INST="install -y"
     AQUIET="--quiet"
     NQUIET=""
-    elif [[ $OPSYS == *"ARCH"* ]]; then
+elif [[ $OPSYS == *"ARCH"* ]]; then
     PCKMGR="pacman"
     PCK_INST="-S --noconfirm"
     AQUIET=""
@@ -186,20 +187,20 @@ REBOOTREQUIRED=0
 
 ## Color settings
 ## High Intensity
-IGreen='\e[0;92m'       # Green
-IYellow='\e[0;93m'      # Yellow
-IBlue='\e[0;94m'        # Blue
-ICyan='\e[0;96m'        # Cyan
-IWhite='\e[0;97m'       # White
+IGreen='\e[0;92m'  # Green
+IYellow='\e[0;93m' # Yellow
+IBlue='\e[0;94m'   # Blue
+ICyan='\e[0;96m'   # Cyan
+IWhite='\e[0;97m'  # White
 
 ## Bold High Intensity
-BIRed='\e[1;91m'        # Red
-BIGreen='\e[1;92m'      # Green
-BIYellow='\e[1;93m'     # Yellow
-BIPurple='\e[1;95m'     # Purple
-BIMagenta='\e[1;95m'    # Purple
-BICyan='\e[1;96m'       # Cyan
-BIWhite='\e[1;97m'      # White
+BIRed='\e[1;91m'     # Red
+BIGreen='\e[1;92m'   # Green
+BIYellow='\e[1;93m'  # Yellow
+BIPurple='\e[1;95m'  # Purple
+BIMagenta='\e[1;95m' # Purple
+BICyan='\e[1;96m'    # Cyan
+BIWhite='\e[1;97m'   # White
 
 ## Whiptail Color Settings
 export NEWT_COLORS='
@@ -257,22 +258,20 @@ printstatus "Making sure THE SCRIPT works..."
 # In order the script to work, some packages need to be installed
 fnCheckRequiedPackages() {
     printl "- Check for required packages:"
-    REQ_PACKAGES=( whiptail ccze net-tools curl )
-    REQ_PACKAGES_COS=( newt epel-release ccze net-tools curl ) # Specific to CentOS
+    REQ_PACKAGES=(whiptail ccze net-tools curl)
+    REQ_PACKAGES_COS=(newt epel-release ccze net-tools curl) # Specific to CentOS
 
     if [[ $OPSYS == *"CENTOS"* ]]; then
         printl "  - OS ${OPSYS} detected ..."
-        for i in "${REQ_PACKAGES_COS[@]}"
-        do
+        for i in "${REQ_PACKAGES_COS[@]}"; do
             printl "  - Checking package ${i}"
-            rpm -qa | grep ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+            rpm -qa | grep ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
         done
     else
         printl "  - OS ${OPSYS} detected ..."
-        for i in "${REQ_PACKAGES[@]}"
-        do
+        for i in "${REQ_PACKAGES[@]}"; do
             printl "  - Checking package ${i}"
-            sudo dpkg -s ${i} > /dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+            sudo dpkg -s ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
         done
     fi
 }
@@ -294,7 +293,7 @@ install_lsb_release
 # Test internet connection.
 testInternetConnection() {
     chmod u+s /bin/ping
-    if [[ "$(ping -c 1 23.1.68.60  | grep '100%' )" != "" ]]; then
+    if [[ "$(ping -c 1 23.1.68.60 | grep '100%')" != "" ]]; then
         printl "${IRed} No internet connection available, aborting! ${IWhite}\r\n"
         exit 0
     fi
@@ -316,14 +315,15 @@ fnSucces() {
 fnMakeBackup() {
     printl "  - Make backup of $1"
     sudo cp "${1}" "${1}".bak-${DATETIME}
-    EXITCODE=$?; fnSucces $EXITCODE
+    EXITCODE=$?
+    fnSucces $EXITCODE
 }
 
 # Function to check if a specific package is installed
 fnPackageCheck() {
     [[ $OPSYS == *"CENTOS"* ]] && return
     printl "  - Check if $1 is installed:"
-    sudo dpkg -s $1 > /dev/null
+    sudo dpkg -s $1 >/dev/null
     if [ $? -eq 0 ]; then
         printl "    - Package $1 is installed."
         PKG_INSTALLED="true"
@@ -348,7 +348,8 @@ fnDoReplace() {
     printl "  - Make changes to ${TARGETFILE} ..."
     printl "  - New vaule: ${PATTERN_OUT}"
     sed -i 's|'"${PATTERN_IN}"'|'"${PATTERN_OUT}"'|g' ${TARGETFILE}
-    EXITCODE=$?; fnSucces $EXITCODE
+    EXITCODE=$?
+    fnSucces $EXITCODE
 }
 
 fnDoReplaceLine() {
@@ -357,13 +358,17 @@ fnDoReplaceLine() {
     printl "  - Make changes to ${TARGETFILE} ..."
     printl "  - New value: ${PATTERN_OUT}"
     sed -i 's|'.*"${PATTERN_IN}".*'|'"${PATTERN_OUT}"'|g' ${TARGETFILE}
-    EXITCODE=$?; fnSucces $EXITCODE
+    EXITCODE=$?
+    fnSucces $EXITCODE
     printl ""
 }
 
 fnYesNo() {
     # Show dialog that is answered with YES or NO. $1 is title and $2 is question to ask.
-    FN_ANSWER=$(whiptail --title "${1}" --yesno --defaultno "${2}" 0 0 3>&1 1>&2 2>&3; echo $?)
+    FN_ANSWER=$(
+        whiptail --title "${1}" --yesno --defaultno "${2}" 0 0 3>&1 1>&2 2>&3
+        echo $?
+    )
     # echo "Answer:  ${FN_ANSWER}"
 }
 
@@ -379,8 +384,8 @@ main_menu1() {
         "SEC_OPS" "Menu - Options for securing the system " ON \
         "log2ram" "Install Log2RAM with custom capacity " OFF \
         3>&1 1>&2 2>&3)
-printl "Output MainMenu1: $MMENU1"
-MYMENU="$MYMENU $MMENU1"
+    printl "Output MainMenu1: $MMENU1"
+    MYMENU="$MYMENU $MMENU1"
 }
 
 ################################################################################
@@ -403,8 +408,8 @@ sub_menu1() {
         "VIMRC" "Fill .vimrc with settings" OFF \
         "RPI_CLONE" "Install RPI-Clone" OFF \
         3>&1 1>&2 2>&3)
-printl "Output SubMenu1: $SMENU1"
-MYMENU="$MYMENU $SMENU1"
+    printl "Output SubMenu1: $SMENU1"
+    MYMENU="$MYMENU $SMENU1"
 }
 
 sub_menu2() {
@@ -418,8 +423,8 @@ sub_menu2() {
         "SSH_ALIVE_INTERVAL" "Enable SSH Alive interval" OFF \
         "SSH_NO_PASSWORD" "Disable login with password on SSH" ON \
         3>&1 1>&2 2>&3)
-printl "Output SubMenu2: $SMENU2"
-MYMENU="$MYMENU $SMENU2"
+    printl "Output SubMenu2: $SMENU2"
+    MYMENU="$MYMENU $SMENU2"
 }
 
 ################################################################################
@@ -460,7 +465,7 @@ fi
 
 ## Module Functions
 fixipCheckOS() {
-    if  [[ $OPSYS != *"CENTOS"* ]] ; then
+    if [[ $OPSYS != *"CENTOS"* ]]; then
         printl "${BIRed}By the look of it, not one of the supported operating systems for this function.${BIWhite}\r\n"
         SUPPORTED_OS=false
     else
@@ -473,23 +478,24 @@ fixipCheckOS() {
 #     # If yes, generate new UUID
 # }
 
-pruts01(){
+pruts01() {
     if [ $? -eq 0 ]; then
-            printl "    - Pulse Agent: Successfully uninstalled the agent."
-            UNINSTALL_AGENT_SUCCES=true
-        else
-            printl "   - Pulse Agent: Agent NOT uninstalled succesfully"
-            UNINSTALL_AGENT_SUCCES=false
-        fi
+        printl "    - Pulse Agent: Successfully uninstalled the agent."
+        UNINSTALL_AGENT_SUCCES=true
+    else
+        printl "   - Pulse Agent: Agent NOT uninstalled succesfully"
+        UNINSTALL_AGENT_SUCCES=false
+    fi
 
-    if  [[ $OPSYS != *"ARCH"* ]] && \
-        [[ $OPSYS != *"PHOTON"* ]] && \
-        [[ $OPSYS != *"RASPBIAN"* ]] && \
-        [[ $OPSYS != *"DEBIAN"* ]] && \
-        [[ $OPSYS != *"UBUNTU"* ]] && \
-        [[ $OPSYS != *"CENTOS"* ]] && \
+    if [[ $OPSYS != *"ARCH"* ]] &&
+        [[ $OPSYS != *"PHOTON"* ]] &&
+        [[ $OPSYS != *"RASPBIAN"* ]] &&
+        [[ $OPSYS != *"DEBIAN"* ]] &&
+        [[ $OPSYS != *"UBUNTU"* ]] &&
+        [[ $OPSYS != *"CENTOS"* ]] &&
         [[ $OPSYS != *"DIETPI"* ]]; then
-        printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"; exit
+        printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"
+        exit
     fi
 }
 
@@ -514,7 +520,6 @@ moduleIPFix() {
     unset SUPPORTED_OS
 }
 
-
 ################################################################################
 # Force the system to use en_US as the language.
 ################################################################################
@@ -529,16 +534,15 @@ moduleChangeLang() {
     else
         printl "  - Language needs to be set ..."
         localectl set-locale LANG=${LANG_DEF}
-        EXITCODE=$?; fnSucces $EXITCODE
+        EXITCODE=$?
+        fnSucces $EXITCODE
     fi
 
     # Modify the SSH service settings to avoid influence from ssh client
     printl "- Check the SSH server config not to accept settings from client."
-    if grep -Fxq "#AcceptEnv LANG LC_*" /etc/ssh/sshd_config
-    then
+    if grep -Fxq "#AcceptEnv LANG LC_*" /etc/ssh/sshd_config; then
         printl "  - /etc/ssh/sshd_config already updated."
-    elif grep -Fxq "AcceptEnv LANG LC_*" /etc/ssh/sshd_config
-    then
+    elif grep -Fxq "AcceptEnv LANG LC_*" /etc/ssh/sshd_config; then
         printl "  - Need to update /etc/ssh/sshd_config:"
 
         ## Define the new value
@@ -551,7 +555,7 @@ moduleChangeLang() {
     else
         printl "  - Not found at all. Add."
         NEWVALUE="#AcceptEnv LANG LC_*"
-        echo "${NEWVALUE}" >> /etc/ssh/sshd_config
+        echo "${NEWVALUE}" >>/etc/ssh/sshd_config
         printl "    - The value: ${NEWVALUE} is added to sshd_config"
     fi
 
@@ -571,7 +575,6 @@ moduleChangeLang() {
     unset LANG_DEF
     unset EXITCODE
 }
-
 
 ################################################################################
 # SSH_ALIVE_INTERVAL - Enable alive interval on SSH
@@ -617,7 +620,6 @@ moduleSshAliveInterval() {
     unset PATTERN_OUT
 }
 
-
 ################################################################################
 # SSH_NO_PASSWORD - Enable alive interval on SSH
 ################################################################################
@@ -638,7 +640,7 @@ moduleSshNoPassword() {
     fnMakeBackup ${TARGETFILE}
 
     # Ask user input to enable (=YES) or disable (=NO)
-    fnYesNo  'SSH Password authentication' 'SSH password authentication enabled?'
+    fnYesNo 'SSH Password authentication' 'SSH password authentication enabled?'
 
     if [ ${FN_ANSWER} -eq 0 ]; then
         printl "- Enable password authentication"
@@ -673,7 +675,6 @@ moduleSshNoPassword() {
     unset PATTERN_OUT
 }
 
-
 ################################################################################
 # Installing RPI-Clone
 ################################################################################
@@ -689,14 +690,15 @@ fnInstallRpiclone() {
 
     printl "  - Clone repo"
     git clone https://github.com/billw2/rpi-clone.git
-    EXITCODE=$?; fnSucces $EXITCODE
+    EXITCODE=$?
+    fnSucces $EXITCODE
 
     printl "  - Copy binaries to /usr/local/sbin"
     sudo cp rpi-clone/rpi-clone rpi-clone/rpi-clone-setup /usr/local/sbin
-    EXITCODE=$?; fnSucces $EXITCODE
+    EXITCODE=$?
+    fnSucces $EXITCODE
 
 }
-
 
 ################################################################################
 # Creating a system administrator account.
@@ -715,63 +717,62 @@ moduleCreateSysadmin() {
         whiptail --title "Administrative Account" --infobox "You are already using the $ADMINNAME account." 8 78
     else
 
-    USERPASS=$(whiptail --passwordbox "Enter a user password" 8 60 3>&1 1>&2 2>&3)
-    if [[ -z "${USERPASS// }" ]]; then
-        printf "No user password given - aborting${BIWhite}\r\n"; exit
-    fi
-
-    USERPASS2=$(whiptail --passwordbox "Confirm user password" 8 60 3>&1 1>&2 2>&3)
-    if  [ $USERPASS2 == "" ]; then
-        printf "${BIRed}No password confirmation given - aborting${BIWhite}\r\n"; exit
-    fi
-
-    if  [ $USERPASS != $USERPASS2 ]
-    then
-        printf "${BIRed}Passwords don't match - aborting${BIWhite}\r\n"; exit
-    fi
-
-    SRC=$USERID
-    DEST=$ADMINNAME
-
-    SRC_GROUPS=$(groups ${SRC})
-    SRC_SHELL=$(awk -F : -v name=${SRC} '(name == $1) { print $7 }' /etc/passwd)
-    NEW_GROUPS=""
-    i=0
-
-    #skip first 3 entries this will be "username", ":", "defaultgroup"
-    for gr in $SRC_GROUPS
-    do
-        if [ $i -gt 2 ]
-        then
-            if [ -z "$NEW_GROUPS" ]; then NEW_GROUPS=$gr; else NEW_GROUPS="$NEW_GROUPS,$gr"; fi
+        USERPASS=$(whiptail --passwordbox "Enter a user password" 8 60 3>&1 1>&2 2>&3)
+        if [[ -z "${USERPASS// /}" ]]; then
+            printf "No user password given - aborting${BIWhite}\r\n"
+            exit
         fi
-        (( i++ ))
-    done
 
-    printl "New user will be added to the following groups: $NEW_GROUPS"
+        USERPASS2=$(whiptail --passwordbox "Confirm user password" 8 60 3>&1 1>&2 2>&3)
+        if [ $USERPASS2 == "" ]; then
+            printf "${BIRed}No password confirmation given - aborting${BIWhite}\r\n"
+            exit
+        fi
 
-    useradd --groups ${NEW_GROUPS} --shell ${SRC_SHELL} --create-home ${DEST}
-    mkhomedir_helper ${DEST}
-    #passwd ${DEST}
+        if [ $USERPASS != $USERPASS2 ]; then
+            printf "${BIRed}Passwords don't match - aborting${BIWhite}\r\n"
+            exit
+        fi
 
-    ## Add the specified password to the account.
-    echo $ADMINNAME:$USERPASS | chpasswd
+        SRC=$USERID
+        DEST=$ADMINNAME
 
-    printstatus "The account $ADMINNAME is created..."
+        SRC_GROUPS=$(groups ${SRC})
+        SRC_SHELL=$(awk -F : -v name=${SRC} '(name == $1) { print $7 }' /etc/passwd)
+        NEW_GROUPS=""
+        i=0
 
-    ## Cleanup variables
-    unset USERPASS
-    unset USERPASS2
-    unset ADMINNAME
-    unset SRC
-    unset DEST
-    unset SRC_GROUPS
-    unset SRC_SHELL
-    unset NEW_GROUPS
-    unset gr
+        #skip first 3 entries this will be "username", ":", "defaultgroup"
+        for gr in $SRC_GROUPS; do
+            if [ $i -gt 2 ]; then
+                if [ -z "$NEW_GROUPS" ]; then NEW_GROUPS=$gr; else NEW_GROUPS="$NEW_GROUPS,$gr"; fi
+            fi
+            ((i++))
+        done
+
+        printl "New user will be added to the following groups: $NEW_GROUPS"
+
+        useradd --groups ${NEW_GROUPS} --shell ${SRC_SHELL} --create-home ${DEST}
+        mkhomedir_helper ${DEST}
+        #passwd ${DEST}
+
+        ## Add the specified password to the account.
+        echo $ADMINNAME:$USERPASS | chpasswd
+
+        printstatus "The account $ADMINNAME is created..."
+
+        ## Cleanup variables
+        unset USERPASS
+        unset USERPASS2
+        unset ADMINNAME
+        unset SRC
+        unset DEST
+        unset SRC_GROUPS
+        unset SRC_SHELL
+        unset NEW_GROUPS
+        unset gr
     fi
 }
-
 
 ################################################################################
 # Updating the Host.
@@ -802,7 +803,6 @@ moduleUpdateHost() {
     REBOOTREQUIRED=1
 }
 
-
 ################################################################################
 # Regenerate the Host SSH keys.
 ################################################################################
@@ -818,7 +818,6 @@ moduleRegenerateSshKeys() {
     ## log the value to syslog
     logger Old SSH fingerprint is: $SSHFINGERPRINT ## Add to syslog
     printl Old SSH fingerprint is: $SSHFINGERPRINT
-
 
     /bin/rm -v /etc/ssh/ssh_host_* 2>&1 | tee -a $LOGFILE
     ssh-keygen -t dsa -N "" -f /etc/ssh/ssh_host_dsa_key
@@ -836,7 +835,6 @@ moduleRegenerateSshKeys() {
     REBOOTREQUIRED=1
 }
 
-
 ################################################################################
 # Show the IP address of the Host at the login screen.
 ################################################################################
@@ -848,21 +846,20 @@ moduleShowIp() {
     printstatus "Show the IP address at the logon screen..."
 
     TARGETFILE=/etc/issue
-    if grep -Fq "IP Address" $TARGETFILE
-    then
+    if grep -Fq "IP Address" $TARGETFILE; then
         printl "String found, $TARGETFILE does not need updating."
     else
         printl "String not found, settings will be added to $TARGETFILE"
         ## Backup issue file.
-        cat /etc/issue >> /etc/issue.bak 2>&1 | tee -a $LOGFILE
+        cat /etc/issue >>/etc/issue.bak 2>&1 | tee -a $LOGFILE
 
         ## Get content and add info to issue file.
-        cat $TARGETFILE > worker_file 2>&1 | tee -a $LOGFILE
-        echo 'IP Address: \4' >> worker_file 2>&1 | tee -a $LOGFILE
-        echo "" >> worker_file 2>&1 | tee -a $LOGFILE
+        cat $TARGETFILE >worker_file 2>&1 | tee -a $LOGFILE
+        echo 'IP Address: \4' >>worker_file 2>&1 | tee -a $LOGFILE
+        echo "" >>worker_file 2>&1 | tee -a $LOGFILE
 
         ## Replace the contend of the issue file.
-        cat worker_file > $TARGETFILE 2>&1 | tee -a $LOGFILE
+        cat worker_file >$TARGETFILE 2>&1 | tee -a $LOGFILE
 
         ## Remove the worker file.
         rm worker_file 2>&1 | tee -a $LOGFILE
@@ -871,7 +868,6 @@ moduleShowIp() {
         unset TARGETFILE
     fi
 }
-
 
 ################################################################################
 # Rename the Host.
@@ -883,7 +879,7 @@ moduleShowIp() {
 moduleHostRename() {
     printstatus "Rename the Host..."
 
-    ## Format the date and time strings 
+    ## Format the date and time strings
     current_time=$(date "+%Y%m%d-%H%M%S")
     RDM="$(date +"%3N")"
 
@@ -905,19 +901,17 @@ moduleHostRename() {
     hostnamectl set-hostname $NEWHOSTNAME
 
     ## Update the /etc/hosts file.
-    if grep -Fq "127.0.1.1" /etc/hosts
-    then
+    if grep -Fq "127.0.1.1" /etc/hosts; then
         ## If found, replace the line
         sed -i "/127.0.1.1/c\127.0.1.1    $NEWHOSTNAME" /etc/hosts
     else
         ## If not found, add the line
-        echo '127.0.1.1    '$NEWHOSTNAME &>> /etc/hosts
+        echo '127.0.1.1    '$NEWHOSTNAME &>>/etc/hosts
     fi
 
     ## Check if Ubuntu Cloud config is used
     cloudFile="/etc/cloud/cloud.cfg"
-    if [ -f "$cloudFile" ]
-    then
+    if [ -f "$cloudFile" ]; then
         sed -i "/preserve_hostname/c\preserve_hostname: true" $cloudFile
     fi
 
@@ -933,7 +927,6 @@ moduleHostRename() {
     unset cloudFile
 }
 
-
 ################################################################################
 # Apply a more convenient Prompt for the user.
 ################################################################################
@@ -941,36 +934,34 @@ moduleHostRename() {
 ## Module Functions
 
 ## Module Logic
-moduleCustomPrompt () {
+moduleCustomPrompt() {
     printstatus "Change the prompt to a more user friendly one..."
 
     TARGETFILE="$WORKDIR/.bashrc"
 
-    OPSYS=${ID^}            # First letter uppercase
-    OPVER=${VERSION_ID^}    # First letter uppercase
+    OPSYS=${ID^}         # First letter uppercase
+    OPVER=${VERSION_ID^} # First letter uppercase
     # Original modification:
     # NEWPROMPT="export PS1='\${debian_chroot:+(\$debian_chroot)}\[\033[00;33m\]\n   \u \[\033[01;34m\] at \[\033[00;33m\] \h\[\033[00m\] \[\033[01;34m\]in \[\033[00;33m\]\w\[\033[00m\]\n\\$ '"
     # New modification:
     NEWPROMPT="export PS1='\${debian_chroot:+(\$debian_chroot)}\n\$OPSYS \$OPVER:\[\033[00;33m\] \u\[\033[01;34m\] at \[\033[00;33m\]\h\[\033[00m\] \[\033[01;34m\]in \[\033[00;33m\]\w\[\033[00m\]\n\\$ '"
 
-    if grep -Fxq "## Custom prompt settings added ..." $TARGETFILE
-    then
+    if grep -Fxq "## Custom prompt settings added ..." $TARGETFILE; then
         printl "String found, $TARGETFILE does not need updating."
         break
     else
         printl "String not found, settings will be added to $TARGETFILE"
-        echo "" >> $TARGETFILE
-        echo "## Custom prompt settings added ..." >> $TARGETFILE
-        echo ". /etc/os-release" >> $TARGETFILE
-        echo "OPSYS=\${ID^}" >> $TARGETFILE
-        echo "OPVER=\${VERSION_ID^}" >> $TARGETFILE
-        echo "$NEWPROMPT" >> $TARGETFILE
+        echo "" >>$TARGETFILE
+        echo "## Custom prompt settings added ..." >>$TARGETFILE
+        echo ". /etc/os-release" >>$TARGETFILE
+        echo "OPSYS=\${ID^}" >>$TARGETFILE
+        echo "OPVER=\${VERSION_ID^}" >>$TARGETFILE
+        echo "$NEWPROMPT" >>$TARGETFILE
     fi
     ## Cleanup variables
     unset TARGETFILE
     unset NEWPROMPT
 }
-
 
 ################################################################################
 # Add convenience in creating scripts.
@@ -979,12 +970,12 @@ moduleCustomPrompt () {
 ## Module Functions
 
 ## Module Logic
-moduleAddCscript () {
+moduleAddCscript() {
     printstatus "Change the prompt to a more user friendly one..."
 
     TARGETFILE="$WORKDIR/.bashrc"
     WORKFILE3="$WORKDIR/cscript"
-    cat > $WORKFILE3 <<EOF
+    cat >$WORKFILE3 <<EOF
 
 ## Create script with header. Usage: cscript scriptname.sh
 cscript(){
@@ -995,13 +986,12 @@ cscript(){
 }
 
 EOF
-    if grep -Fxq "## Create script with header. Usage: cscript scriptname.sh" $TARGETFILE
-    then
+    if grep -Fxq "## Create script with header. Usage: cscript scriptname.sh" $TARGETFILE; then
         printl "String found, $TARGETFILE does not need updating."
     else
         printl "String not found, settings will be added to $TARGETFILE"
-        echo "" >> $TARGETFILE
-        cat "$WORKFILE3" >> $TARGETFILE
+        echo "" >>$TARGETFILE
+        cat "$WORKFILE3" >>$TARGETFILE
         rm $WORKFILE3
     fi
     ## Cleanup variables
@@ -1009,18 +999,16 @@ EOF
     unset WORKFILE3
 }
 
-
 ################################################################################
 # Add local mirror (NL).
 ################################################################################
 
 ## Module Functions
 fnFindStringInFile() {
-    if grep -Fxq "${PATTERN_OUT}" "${TARGETFILE}"
-    then
+    if grep -Fq "${PATTERN_OUT}" "${TARGETFILE}"; then
         # code if found
         printl "- Target pattern found. Nothing else to do ..."
-    elif grep -Fxq "${PATTERN_IN}" "${TARGETFILE}"; then
+    elif grep -Fq "${PATTERN_IN}" "${TARGETFILE}"; then
         # code if not found
         printl "- Search pattern found. Replace with new one ..."
         fnDoReplace
@@ -1031,7 +1019,7 @@ fnFindStringInFile() {
 }
 
 ## Module Logic
-moduleLocalMirror () {
+moduleLocalMirror() {
     printstatus "Change the apt mirror to a local one..."
 
     ## Check if this is Raspbian
@@ -1049,7 +1037,7 @@ moduleLocalMirror () {
         # Check if already has the configuration
         fnFindStringInFile
 
-    elif  [[ $OPSYS == *"UBUNTU"* ]] && [[ $SYSARCH == *"AARCH64"* ]]; then
+    elif [[ $OPSYS == *"UBUNTU"* ]] && [[ $SYSARCH == *"AARCH64"* ]]; then
         printl "Ubuntu on ARM64 detected..."
 
         ## Prepare settings as variables
@@ -1073,7 +1061,6 @@ moduleLocalMirror () {
     unset PATTERN_OUT
 }
 
-
 ################################################################################
 # Add additional aliases to the profile of the user.
 ################################################################################
@@ -1087,32 +1074,30 @@ moduleCustomAlias() {
     TARGETFILE="$WORKDIR/.bash_aliases"
     WORKFILE2="$WORKDIR/.bashrc"
     ## Check if .bash_aliases will be loaded.
-    if grep -Fq "bash_aliases" $WORKFILE2
-    then
+    if grep -Fq "bash_aliases" "$WORKFILE2"; then
         ## If found, replace the line
         printl ".bashrc calls .bash_aliases. All good here."
     else
         ## If not found, add the line
         printl ".bashrc does not call .bash_aliases. Making sure it does."
-cat >> $WORKFILE2 <<EOF
+        cat >>"$WORKFILE2" <<EOF
 ## Call the .bash_aliases file during logon.
 if [ -f ~/.bash_aliases ]; then
 . ~/.bash_aliases
 fi
 EOF
-        source $WORKFILE2
+        source "$WORKFILE2"
     fi
 
-    if grep -Fxq "## Custom aliases added ..." $TARGETFILE
-    then
+    if grep -Fxq "## Custom aliases added ..." $TARGETFILE; then
         printl "String found, $TARGETFILE does not need updating."
-        break
+        return
     else
         printl "String not found, settings will be added to $TARGETFILE"
-        echo "" >> $TARGETFILE
-        echo "## Custom aliases added ..." >> $TARGETFILE
-        echo "$NEWPROMPT" >> $TARGETFILE
-cat > $TARGETFILE << EOF
+        echo "" >>$TARGETFILE
+        echo "## Custom aliases added ..." >>$TARGETFILE
+        echo "$NEWPROMPT" >>$TARGETFILE
+        cat >$TARGETFILE <<EOF
 ## Enable color
 export CLICOLOR=true
 
@@ -1147,7 +1132,6 @@ EOF
     unset WORKFILE2
 }
 
-
 ################################################################################
 # Fill .vimrc with settings
 ################################################################################
@@ -1158,7 +1142,8 @@ EOF
 moduleVimrc() {
     printstatus "Fill .vimrc with settings ..."
     curl https://raw.githubusercontent.com/MTijbout/theScript_pub/master/vimrc -o "/home/${USERID}/.vimrc"
-    EXITCODE=$?; fnSucces $EXITCODE
+    EXITCODE=$?
+    fnSucces $EXITCODE
 }
 #     TARGETFILE="$WORKDIR/.vimrc"
 #     cat > $TARGETFILE << EOF
@@ -1167,7 +1152,6 @@ moduleVimrc() {
 # syntax on
 # colorscheme desert
 # EOF
-
 
 ################################################################################
 # Remove the need to type a password when using sudo.
@@ -1187,7 +1171,6 @@ moduleNoPassSudo() {
         chmod 0440 /etc/sudoers.d/010_$USERID-nopasswd
     fi
 }
-
 
 ################################################################################
 # Install Log2RAM to extend the life SD cards.
@@ -1233,7 +1216,7 @@ Log2RAMgitPreReqs() {
         if [ $? -eq 0 ]; then
             printl "    - $MODULE_NAME: git installed sucessfully."
             GIT_INSTALL_SUCCES="true"
-        else 
+        else
             printl "    - $MODULE_NAME: git did not install sucessfully."
             GIT_INSTALL_SUCCES="false"
             return ## Exit function on failure.
@@ -1318,7 +1301,7 @@ moduleLog2RAM() {
             Log2RAMChangeCapacity ## Change Log2RAM capacity.
         else
             ## Log2RAM is not installed. Install.
-            Log2RAMgitPreReqs ## Check if git is installed.
+            Log2RAMgitPreReqs      ## Check if git is installed.
             Log2RAMDownloadInstall ## Download and Install Log2RAM.
             if [[ $APP_INSTALL_SUCCES == "true" ]]; then
                 printl "    - $MODULE_NAME: Already installed. Initiate config change"
@@ -1327,7 +1310,7 @@ moduleLog2RAM() {
         fi
     else
         printl "    - $MODULE_NAME: ERROR - Incorrect OS. Exit here."
-            return ## Exit function on ERROR.
+        return ## Exit function on ERROR.
     fi
 
     ## Cleanup variables
@@ -1337,7 +1320,6 @@ moduleLog2RAM() {
     unset Log2RAM_OS_CHECK
     unset GIT_INSTALL_SUCCES
 }
-
 
 ################################################################################
 # Configure to use the MAC address for DHCP.
@@ -1396,7 +1378,7 @@ fnMacDHCPEnabled() {
     else
         printl "    - DHCP is NOT enabled."
         MACDHCP_EN="false"
-   fi
+    fi
 }
 
 fnMacDHCPUseMac() {
@@ -1486,7 +1468,6 @@ fnMacDHCP() {
     unset CONF_CHANGE_SUCCES
 }
 
-
 ################################################################################
 # Disable automatic updates
 ################################################################################
@@ -1500,7 +1481,7 @@ fnDisableAutoUpdates() {
     OPSYS=${ID^^}
 
     printl "  - Check if OS is Ubuntu. Skip if not ..."
-    if  [[ $OPSYS != *"UBUNTU"* ]]; then
+    if [[ $OPSYS != *"UBUNTU"* ]]; then
         printl "    - OS is not Ubuntu. Skipping ..."
         return
     fi
@@ -1532,7 +1513,6 @@ fnDisableAutoUpdates() {
     sudo sed -i '+s+'"${OLDVAL}"'+'"${NEWVAL}"'+' ${CONF_FILE}
 }
 
-
 ################################################################################
 # Set timezone to Europe/Amsterdam
 ################################################################################
@@ -1548,7 +1528,6 @@ fnSetTimezone() {
     sudo timedatectl set-timezone ${TIMEZONE}
 }
 
-
 ################################################################################
 ## Call the selected options for execution
 ################################################################################
@@ -1560,45 +1539,43 @@ CONVERSION=$(sed 's/"//g' <<<"${MYMENU}")
 ARRAY=($CONVERSION)
 
 # Evaluate all elements in the array:
-for ELEMENT in "${ARRAY[@]}"
-do
+for ELEMENT in "${ARRAY[@]}"; do
     # echo -e "\n- Processing: ${ELEMENT}"
     case ${ELEMENT} in
     # Main Menu
-    QUIET               ) printl "" ;;
-    CUST_OPS            ) printl "" ;;
-    SEC_OPS             ) printl "" ;;
-    log2ram             ) moduleLog2RAM ;;
+    QUIET) printl "" ;;
+    CUST_OPS) printl "" ;;
+    SEC_OPS) printl "" ;;
+    log2ram) moduleLog2RAM ;;
 
     # Customization options
-    DISAUPD             ) fnDisableAutoUpdates ;;
-    TZADAM              ) fnSetTimezone ;;
-    CHANGE_LANG         ) moduleChangeLang ;;
-    SHOW_IP             ) moduleShowIp ;;
-    MACDHCP             ) fnMacDHCP ;;
-    IP_FIX              ) moduleIPFix ;;
-    CUSTOM_PROMPT       ) moduleCustomPrompt ;;
-    ADD_CSCRIPT         ) moduleAddCscript ;;
-    LOCAL_MIRROR        ) moduleLocalMirror ;;
-    CUSTOM_ALIAS        ) moduleCustomAlias ;;
-    VIMRC               ) moduleVimrc ;;
-    RPI_CLONE           ) fnInstallRpiclone ;;
+    DISAUPD) fnDisableAutoUpdates ;;
+    TZADAM) fnSetTimezone ;;
+    CHANGE_LANG) moduleChangeLang ;;
+    SHOW_IP) moduleShowIp ;;
+    MACDHCP) fnMacDHCP ;;
+    IP_FIX) moduleIPFix ;;
+    CUSTOM_PROMPT) moduleCustomPrompt ;;
+    ADD_CSCRIPT) moduleAddCscript ;;
+    LOCAL_MIRROR) moduleLocalMirror ;;
+    CUSTOM_ALIAS) moduleCustomAlias ;;
+    VIMRC) moduleVimrc ;;
+    RPI_CLONE) fnInstallRpiclone ;;
 
     # Security options
-    CREATE_SYSADMIN     ) moduleCreateSysadmin ;;
-    UPDATE_HOST         ) moduleUpdateHost ;;
-    NO_PASS_SUDO        ) moduleNoPassSudo ;;
-    REGENERATE_SSH_KEYS ) moduleRegenerateSshKeys ;;
-    HOST_RENAME         ) moduleHostRename ;;
-    SSH_ALIVE_INTERVAL  ) moduleSshAliveInterval ;;
-    SSH_NO_PASSWORD     ) moduleSshNoPassword ;;
+    CREATE_SYSADMIN) moduleCreateSysadmin ;;
+    UPDATE_HOST) moduleUpdateHost ;;
+    NO_PASS_SUDO) moduleNoPassSudo ;;
+    REGENERATE_SSH_KEYS) moduleRegenerateSshKeys ;;
+    HOST_RENAME) moduleHostRename ;;
+    SSH_ALIVE_INTERVAL) moduleSshAliveInterval ;;
+    SSH_NO_PASSWORD) moduleSshNoPassword ;;
 
     *)
         printl "Not sure what happened here. Do not know what to do with: ${ELEMENT}"
         ;;
     esac
 done
-
 
 ################################################################################
 ## Some cleanup at the end...
@@ -1607,9 +1584,9 @@ done
 #$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
 
 printstatus "All done."
-printf "${BIGreen}== ${BIYELLOW}When complete, remove the script from the /home/$USERID directory.\r\n" >> $LOGFILE
-printf "${BIGreen}==\r\n" >> $LOGFILE
-printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >> $LOGFILE
+printf "${BIGreen}== ${BIYELLOW}When complete, remove the script from the /home/$USERID directory.\r\n" >>$LOGFILE
+printf "${BIGreen}==\r\n" >>$LOGFILE
+printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >>$LOGFILE
 # printl ""
 # printl "Current IP: $MY_IP"
 # printl "Changed Hostname: $NEWHOSTNAME"
