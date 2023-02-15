@@ -2,10 +2,10 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 27/apr/19
-# Date last update: 2021-03-08
+# Date last update: 2023-01-24
 # Author: Marco Tijbout
 #
-# Version: 20210308
+# Version: 20230124-9u
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -26,6 +26,8 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 20230124 Marco Tijbout:
+#   Git commit signing with 1Password for increased security.
 # 20210308 Marco Tijbout:
 #   Introducing new version numbering. Changed to use the date
 #   SSH_ALIVE_INTERVAL - New module to set SSH client alive interval
@@ -105,8 +107,8 @@
 clear
 
 ## Version of theScript.sh
-SCRIPT_VERSION="20210308"
-LAST_MODIFICATION="20210308-161937"
+SCRIPT_VERSION="9u"
+LAST_MODIFICATION="20230124-172450"
 
 ## The user that executed the script.
 USERID=$(logname)
