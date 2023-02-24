@@ -137,7 +137,7 @@ if [ "$EUID" -ne 0 ]; then
     printl ""
     printl "Please run this script using sudo."
     printl ""
-    exit
+    exit # Intentional exit of the schript here.
 fi
 
 ## Get Operating System information.
@@ -158,7 +158,7 @@ if [[ $OPSYS != *"ARCH"* ]] &&
     [[ $OPSYS != *"OPENSUSE"* ]] &&
     [[ $OPSYS != *"DIETPI"* ]]; then
     printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"
-    exit
+    exit # Intentional exit of the schript here.
 fi
 
 ## Check for OS that uses other update mechanisms.
@@ -212,18 +212,6 @@ BIPurple='\e[1;95m'  # Purple
 BIMagenta='\e[1;95m' # Purple
 BICyan='\e[1;96m'    # Cyan
 BIWhite='\e[1;97m'   # White
-
-## Alternative to Whiptail is dialog. Available on Ubuntu, OpenSUSE, CentOS
-## Whiptail Color Settings
-export NEWT_COLORS='
-root=black,lightgray
-title=yellow,blue
-window=,blue
-border=white,blue
-textbox=white,blue
-button=black,white
-shadow=,gray
-'
 
 ## Determine CPU Architecture:
 CPUARCH=$(lscpu | grep Architecture | tr -d ":" | awk '{print $2}')
@@ -313,7 +301,7 @@ testInternetConnection() {
     chmod u+s /bin/ping
     if [[ "$(ping -c 1 23.1.68.60 | grep '100%')" != "" ]]; then
         printl "${IRed} No internet connection available, aborting! ${IWhite}\r\n"
-        exit 0
+        return 0 ## Exit function on ERROR.
     fi
 }
 
@@ -384,7 +372,6 @@ fnDoReplaceLine() {
 fnYesNo() {
     # Show dialog that is answered with YES or NO. $1 is title and $2 is question to ask.
     FN_ANSWER=$(
-        # whiptail --title "${1}" --yesno --defaultno "${2}" 0 0 3>&1 1>&2 2>&3
         dialog --title "${1}" --yesno --defaultno "${2}" 0 0 3>&1 1>&2 2>&3
         echo $?
     )
@@ -394,20 +381,6 @@ fnYesNo() {
 ################################################################################
 ## Main Menu Definition
 ################################################################################
-
-old_main_menu1() {
-    # Checklist Dialog
-    # Name: Main Menu 1
-    MMENU1=$(whiptail --title "Main Menu Selection" --checklist --notags \
-        "\nSelect items as required then hit OK " 25 75 16 \
-        "QUIET" "Quiet(er) install - untick for lots of info " OFF \
-        "CUST_OPS" "Menu - Customization options " OFF \
-        "SEC_OPS" "Menu - Options for securing the system " ON \
-        "log2ram" "Install Log2RAM with custom capacity " OFF \
-        3>&1 1>&2 2>&3)
-    printl "Output MainMenu1: $MMENU1"
-    MYMENU="$MYMENU $MMENU1"
-}
 
 main_menu1() {
     # Checklist Dialog
@@ -421,38 +394,16 @@ main_menu1() {
         3>&1 1>&2 2>&3)
     dialog --clear
     clear
-    printl "Selections made in MainMenu1: $MMENU1"
+    printl "Selections made in Main Menu1: $MMENU1"
     MYMENU="$MYMENU $MMENU1"
-    echo "Output of variable: $MMENU1"
-
 }
 
 ################################################################################
 ## Sub Menus Definition
 ################################################################################
 
-old_sub_menu1() {
-    SMENU1=$(whiptail --checklist --notags --title "Select customization options" \
-        "\nSelect items as required then hit OK " 25 75 16 \
-        "DISAUPD" "Disable automatic updates on Ubuntu" OFF \
-        "TZADAM" "Set timezone to Europe/Amsterdam" OFF \
-        "CHANGE_LANG" "Change Language to US-English " OFF \
-        "SHOW_IP" "Show IP on logon screen " OFF \
-        "MACDHCP" "Configure to use MAC for DHCP " OFF \
-        "IP_FIX" "Configure IP networking " OFF \
-        "CUSTOM_PROMPT" "Updated Prompt " OFF \
-        "ADD_CSCRIPT" "Add cscript to .bashrc " OFF \
-        "LOCAL_MIRROR" "Add local mirror for APT " OFF \
-        "CUSTOM_ALIAS" "Aliases for ease of use " OFF \
-        "VIMRC" "Fill .vimrc with settings" OFF \
-        "RPI_CLONE" "Install RPI-Clone" OFF \
-        3>&1 1>&2 2>&3)
-    printl "Output SubMenu1: $SMENU1"
-    MYMENU="$MYMENU $SMENU1"
-}
-
 sub_menu1() {
-    SMENU1=$(dialog --checklist "Select customization options" \
+    SMENU1=$(dialog --title "Select customization options" \
         --checklist "\nSelect items as required then hit OK " 25 75 16 \
         "DISAUPD" "Disable automatic updates on Ubuntu" OFF \
         "TZADAM" "Set timezone to Europe/Amsterdam" OFF \
@@ -469,25 +420,8 @@ sub_menu1() {
         3>&1 1>&2 2>&3)
     dialog --clear
     clear
-    printl "Output SubMenu1: $SMENU1"
+    printl "Selections made in Sub Menu1: $SMENU1"
     MYMENU="$MYMENU $SMENU1"
-    echo "Output of variable: $SMENU1"
-}
-
-
-old_sub_menu2() {
-    SMENU2=$(whiptail --checklist --notags --title "Select securing options" \
-        "\nSelect items as required then hit OK " 25 75 16 \
-        "CREATE_SYSADMIN" "Create alternative sysadmin account " OFF \
-        "UPDATE_HOST" "Apply latest updates available " OFF \
-        "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
-        "REGENERATE_SSH_KEYS" "Regenerate the SSH host keys " OFF \
-        "HOST_RENAME" "Rename the HOST " OFF \
-        "SSH_ALIVE_INTERVAL" "Enable SSH Alive interval" OFF \
-        "SSH_NO_PASSWORD" "Disable login with password on SSH" ON \
-        3>&1 1>&2 2>&3)
-    printl "Output SubMenu2: $SMENU2"
-    MYMENU="$MYMENU $SMENU2"
 }
 
 sub_menu2() {
@@ -499,13 +433,12 @@ sub_menu2() {
         "REGENERATE_SSH_KEYS" "Regenerate the SSH host keys " OFF \
         "HOST_RENAME" "Rename the HOST " OFF \
         "SSH_ALIVE_INTERVAL" "Enable SSH Alive interval" OFF \
-        "SSH_NO_PASSWORD" "Disable login with password on SSH" ON \
+        "SSH_NO_PASSWORD" "Disable login with password on SSH" OFF \
         3>&1 1>&2 2>&3)
     dialog --clear
     clear
-    printl "Output SubMenu2: $SMENU2"
+    printl "Selections made in Sub Menu1: $SMENU2"
     MYMENU="$MYMENU $SMENU2"
-    echo "Output of variable: $SMENU2"
 }
 
 ################################################################################
@@ -530,8 +463,8 @@ if [[ $MYMENU != *"QUIET"* ]]; then
 fi
 
 if [[ $MYMENU == "" ]]; then
-    # whiptail --title "Installation Aborted" --msgbox "Cancelled as requested." 8 78
     dialog  --title "Installation Aborted" --msgbox "Cancelled as requested." 8 78
+    printl "Cancelled as requested."
     exit
 fi
 
@@ -671,7 +604,6 @@ moduleSshAliveInterval() {
 
     # Ask user input for value. Default 1800 seconds = 30 minutes.
     SSHALIVEINT=1800
-    # SSHALIVEINT=$(whiptail --inputbox "\nProvide new value in seconds:\n" --title "SSH Client Alive Interval" 8 60 $SSHALIVEINT 3>&1 1>&2 2>&3)
     SSHALIVEINT=$(dialog --title "SSH Client Alive Interval" --inputbox "\nProvide new value in seconds:\n"  8 60 $SSHALIVEINT 3>&1 1>&2 2>&3)
 
     # First value
@@ -792,32 +724,39 @@ fnInstallRpiclone() {
 ## Module Logic
 moduleCreateSysadmin() {
     printstatus "Creating alternative administrative account..."
+    ##
+    ## Make a check if the new account already exists or not.
+    ##
+    ## Ask for full name
+    ##
 
     ADMINNAME=sysadmin
-    # ADMINNAME=$(whiptail --title "Administrative Account" --inputbox "\nEnter the name of the administrative account:\n" 8 60 $ADMINNAME 3>&1 1>&2 2>&3)
-    ADMINNAME=$(dialog --title "Administrative Account" --inputbox "\nEnter the name of the administrative account:\n" 8 60 $ADMINNAME 3>&1 1>&2 2>&3)
+    ADMINNAME=$(dialog --title "Administrative Account" --inputbox "\nEnter the name of the administrative account:\n" 8 60 ${ADMINNAME} 3>&1 1>&2 2>&3)
+    printl "- The account name provided: ${ADMINNAME}"
 
-    if [ $USERID == $ADMINNAME ]; then
-        # whiptail --title "Administrative Account" --infobox "You are already using the $ADMINNAME account." 8 78
-        dialog --title "Administrative Account" --infobox "You are already using the $ADMINNAME account." 8 78
+    if [ "${USERID}" == "${ADMINNAME}" ]; then
+        dialog --title "Administrative Account" --msgbox "\nYou are already using the ${ADMINNAME} account." 8 78
+        dialog --clear
+        printl "  - You are already using the ${ADMINNAME} account."
+    elif /bin/id "${ADMINNAME}" 2>/dev/null; then
+        dialog --title "Administrative Account" --msgbox "\nThe account ${ADMINNAME} already exists." 8 78
+        dialog --clear
+        printl "  - The account ${ADMINNAME} already exists."
     else
-
-        #USERPASS=$(whiptail --passwordbox "Enter a user password" 8 60 3>&1 1>&2 2>&3)
         USERPASS=$(dialog --passwordbox "Enter a user password" 8 60 3>&1 1>&2 2>&3)
         if [[ -z "${USERPASS// /}" ]]; then
-            printf "No user password given - aborting${BIWhite}\r\n"
+            printl "  - No user password given - aborting.\r\n"
             exit
         fi
 
-        # USERPASS2=$(whiptail --passwordbox "Confirm user password" 8 60 3>&1 1>&2 2>&3)
         USERPASS2=$(dialog --passwordbox "Confirm user password" 8 60 3>&1 1>&2 2>&3)
         if [ $USERPASS2 == "" ]; then
-            printf "${BIRed}No password confirmation given - aborting${BIWhite}\r\n"
+            printl "  - No password confirmation given - aborting.\r\n"
             exit
         fi
 
         if [ $USERPASS != $USERPASS2 ]; then
-            printf "${BIRed}Passwords don't match - aborting${BIWhite}\r\n"
+            printl "  - Passwords don't match - aborting.\r\n"
             exit
         fi
 
@@ -833,20 +772,29 @@ moduleCreateSysadmin() {
         for gr in $SRC_GROUPS; do
             if [ $i -gt 2 ]; then
                 if [ -z "$NEW_GROUPS" ]; then NEW_GROUPS=$gr; else NEW_GROUPS="$NEW_GROUPS,$gr"; fi
+                    EXITCODE=$?
+                    fnSucces $EXITCODE
             fi
             ((i++))
         done
 
-        printl "New user will be added to the following groups: $NEW_GROUPS"
+        dialog --clear
+        printl "- New user will be added to the following groups: $NEW_GROUPS"
 
-        useradd --groups ${NEW_GROUPS} --shell ${SRC_SHELL} --create-home ${DEST}
-        mkhomedir_helper ${DEST}
+        printl "- Creation of user account and homedir."
+        useradd --groups "${NEW_GROUPS}" --shell "${SRC_SHELL}" --create-home "${DEST}"
+        mkhomedir_helper "${DEST}"
+        EXITCODE=$?
+        fnSucces $EXITCODE
         #passwd ${DEST}
 
         ## Add the specified password to the account.
+        printl "- Change password for the new user account."
         echo $ADMINNAME:$USERPASS | chpasswd
+        EXITCODE=$?
+        fnSucces $EXITCODE
 
-        printstatus "The account $ADMINNAME is created..."
+        printl "- The account ${DEST} is created..."
 
         ## Cleanup variables
         unset USERPASS
@@ -1256,9 +1204,9 @@ moduleNoPassSudo() {
     printstatus "Remove for need of password performing sudo..."
 
     if ls /etc/sudoers.d/*$USERID*; then
-        printl "Using password for sudo is not required for this user."
+        printl "- Using password for sudo is not required for this user."
     else
-        printl "Removed for need of password performing sudo for this user."
+        printl "- Removed for need of password performing sudo for this user."
         echo "$USERID ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/010_$USERID-nopasswd
         chmod 0440 /etc/sudoers.d/010_$USERID-nopasswd
     fi
@@ -1677,9 +1625,9 @@ done
 #$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
 
 printstatus "All done."
-printf "${BIGreen}== ${BIYELLOW}When complete, remove the script from the /home/$USERID directory.\r\n" >>$LOGFILE
-printf "${BIGreen}==\r\n" >>$LOGFILE
-printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >>$LOGFILE
+# printf "${BIGreen}== ${BIYELLOW}When complete, remove the script from the /home/$USERID directory.\r\n" >>$LOGFILE
+# printf "${BIGreen}==\r\n" >>$LOGFILE
+# printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >>$LOGFILE
 # printl ""
 # printl "Current IP: $MY_IP"
 # printl "Changed Hostname: $NEWHOSTNAME"
@@ -1687,19 +1635,23 @@ printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >>$LOGFIL
 if [[ $REBOOTREQUIRED == *"1"* ]]; then
     # if (whiptail --title "Script Finished" --yesno "Changes made require a REBOOT.\nOK?" 8 78); then
     if (dialog --title "Script Finished" --yesno "Changes made require a REBOOT.\nOK?" 8 78); then
+        dialog --clear 
         printl "Script is Finished. Rebooting now."
         shutdown -r now
     else
         # whiptail --title "Script Finished" --msgbox "Changes made require a REBOOT.\nPlease reboot ASAP." 8 78
         dialog --title "Script Finished" --msgbox "Changes made require a REBOOT.\nPlease reboot ASAP." 8 78
+        dialog --clear
         echo ""
         printl "Script is Finished. Changes made require a reboot. Please REBOOT asap!"
         echo ""
     fi
-else
-    echo ""
-    # whiptail --title "Script Finished" --msgbox "ALL DONE\nNo reboot required. But will not harm by doing." 8 78
-    dialog --title "Script Finished" --msgbox "ALL DONE\nNo reboot required. But will not harm by doing." 8 78
-    printl "ALL DONE - No reboot required. But will not harm by doing."
-    echo ""
 fi
+
+# else
+#     echo ""
+#     # whiptail --title "Script Finished" --msgbox "ALL DONE\nNo reboot required. But will not harm by doing." 8 78
+#     dialog --title "Script Finished" --msgbox "ALL DONE\nNo reboot required. But will not harm by doing." 8 78
+#     printl "ALL DONE - No reboot required. But will not harm by doing."
+#     echo ""
+# fi
