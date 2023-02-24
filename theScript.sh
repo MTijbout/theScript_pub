@@ -2,10 +2,10 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 27/apr/19
-# Date last update: 2023-01-24
+# Date last update: 2023-02-24
 # Author: Marco Tijbout
 #
-# Version: 20230124-9u
+# Version: 20230224-132625
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -26,6 +26,8 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 20230224 Marco Tijbout:
+#   Enabled openSUSE updating
 # 20230124 Marco Tijbout:
 #   Git commit signing with 1Password for increased security.
 # 20210308 Marco Tijbout:
@@ -107,8 +109,8 @@
 clear
 
 ## Version of theScript.sh
-SCRIPT_VERSION="9u"
-LAST_MODIFICATION="20230124-172450"
+SCRIPT_VERSION="9v"
+LAST_MODIFICATION="20230224-132625"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -152,6 +154,7 @@ if [[ $OPSYS != *"ARCH"* ]] &&
     [[ $OPSYS != *"DEBIAN"* ]] &&
     [[ $OPSYS != *"UBUNTU"* ]] &&
     [[ $OPSYS != *"CENTOS"* ]] &&
+    [[ $OPSYS != *"OPENSUSE"* ]] &&
     [[ $OPSYS != *"DIETPI"* ]]; then
     printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"
     exit
@@ -173,6 +176,11 @@ elif [[ $OPSYS == *"ARCH"* ]]; then
     PCK_INST="-S --noconfirm"
     AQUIET=""
     NQUIET=""
+elif [[ $OPSYS == *"OPENSUSE"* ]]; then
+    PCKMGR="zypper"
+    PCK_INST="install -y"
+    AQUIET="--quiet"
+    NQUIET="--verbose"
 else
     PCKMGR="apt-get"
     PCK_INST="install -y"
@@ -793,6 +801,10 @@ moduleUpdateHost() {
         #$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
     elif [[ $OPSYS == *"ARCH"* ]]; then
         $PCKMGR -Syu 2>&1 | tee -a $LOGFILE
+    elif [[ $OPSYS == *"OPENSUSE"* ]]; then
+        $PCKMGR $AQUIET refresh 2>&1 | tee -a $LOGFILE
+        $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
+        $PCKMGR $AQUIET clean 2>&1 | tee -a $LOGFILE
     else
         $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET list --upgradable 2>&1 | tee -a $LOGFILE
