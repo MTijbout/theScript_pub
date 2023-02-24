@@ -5,7 +5,7 @@
 # Date last update: 2023-02-24
 # Author: Marco Tijbout
 #
-# Version: 20230224-132625
+# Version: 20230224-154643
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -28,6 +28,7 @@
 # Version history:
 # 20230224 Marco Tijbout:
 #   Enabled openSUSE updating
+#   Replaced whiptail by dialog
 # 20230124 Marco Tijbout:
 #   Git commit signing with 1Password for increased security.
 # 20210308 Marco Tijbout:
@@ -110,7 +111,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="9v"
-LAST_MODIFICATION="20230224-132625"
+LAST_MODIFICATION="20230224-154643"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -212,6 +213,7 @@ BIMagenta='\e[1;95m' # Purple
 BICyan='\e[1;96m'    # Cyan
 BIWhite='\e[1;97m'   # White
 
+## Alternative to Whiptail is dialog. Available on Ubuntu, OpenSUSE, CentOS
 ## Whiptail Color Settings
 export NEWT_COLORS='
 root=black,lightgray
@@ -268,12 +270,18 @@ printstatus "Making sure THE SCRIPT works..."
 # In order the script to work, some packages need to be installed
 fnCheckRequiedPackages() {
     printl "- Check for required packages:"
-    REQ_PACKAGES=(whiptail ccze net-tools curl)
-    REQ_PACKAGES_COS=(newt epel-release ccze net-tools curl) # Specific to CentOS
+    REQ_PACKAGES=(dialog ccze net-tools curl)
+    REQ_PACKAGES_COS=(dialog epel-release ccze net-tools curl) # Specific to CentOS
 
     if [[ $OPSYS == *"CENTOS"* ]]; then
         printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES_COS[@]}"; do
+            printl "  - Checking package ${i}"
+            rpm -qa | grep ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+        done
+    elif [[ $OPSYS == *"OPENSUSE"* ]]; then
+        printl "  - OS ${OPSYS} detected ..."
+        for i in "${REQ_PACKAGES[@]}"; do
             printl "  - Checking package ${i}"
             rpm -qa | grep ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
         done
@@ -376,7 +384,8 @@ fnDoReplaceLine() {
 fnYesNo() {
     # Show dialog that is answered with YES or NO. $1 is title and $2 is question to ask.
     FN_ANSWER=$(
-        whiptail --title "${1}" --yesno --defaultno "${2}" 0 0 3>&1 1>&2 2>&3
+        # whiptail --title "${1}" --yesno --defaultno "${2}" 0 0 3>&1 1>&2 2>&3
+        dialog --title "${1}" --yesno --defaultno "${2}" 0 0 3>&1 1>&2 2>&3
         echo $?
     )
     # echo "Answer:  ${FN_ANSWER}"
@@ -386,7 +395,9 @@ fnYesNo() {
 ## Main Menu Definition
 ################################################################################
 
-main_menu1() {
+old_main_menu1() {
+    # Checklist Dialog
+    # Name: Main Menu 1
     MMENU1=$(whiptail --title "Main Menu Selection" --checklist --notags \
         "\nSelect items as required then hit OK " 25 75 16 \
         "QUIET" "Quiet(er) install - untick for lots of info " OFF \
@@ -398,11 +409,29 @@ main_menu1() {
     MYMENU="$MYMENU $MMENU1"
 }
 
+main_menu1() {
+    # Checklist Dialog
+    # Name: Main Menu 1
+    MMENU1=$(dialog --title "Main Menu Selection" \
+        --checklist "\nSelect items as required then hit OK" 25 75 16 \
+        "QUIET" "Quiet(er) install - untick for lots of info " OFF \
+        "CUST_OPS" "Menu - Customization options " OFF \
+        "SEC_OPS" "Menu - Options for securing the system " ON \
+        "log2ram" "Install Log2RAM with custom capacity " OFF \
+        3>&1 1>&2 2>&3)
+    dialog --clear
+    clear
+    printl "Selections made in MainMenu1: $MMENU1"
+    MYMENU="$MYMENU $MMENU1"
+    echo "Output of variable: $MMENU1"
+
+}
+
 ################################################################################
 ## Sub Menus Definition
 ################################################################################
 
-sub_menu1() {
+old_sub_menu1() {
     SMENU1=$(whiptail --checklist --notags --title "Select customization options" \
         "\nSelect items as required then hit OK " 25 75 16 \
         "DISAUPD" "Disable automatic updates on Ubuntu" OFF \
@@ -422,7 +451,31 @@ sub_menu1() {
     MYMENU="$MYMENU $SMENU1"
 }
 
-sub_menu2() {
+sub_menu1() {
+    SMENU1=$(dialog --checklist "Select customization options" \
+        --checklist "\nSelect items as required then hit OK " 25 75 16 \
+        "DISAUPD" "Disable automatic updates on Ubuntu" OFF \
+        "TZADAM" "Set timezone to Europe/Amsterdam" OFF \
+        "CHANGE_LANG" "Change Language to US-English " OFF \
+        "SHOW_IP" "Show IP on logon screen " OFF \
+        "MACDHCP" "Configure to use MAC for DHCP " OFF \
+        "IP_FIX" "Configure IP networking " OFF \
+        "CUSTOM_PROMPT" "Updated Prompt " OFF \
+        "ADD_CSCRIPT" "Add cscript to .bashrc " OFF \
+        "LOCAL_MIRROR" "Add local mirror for APT " OFF \
+        "CUSTOM_ALIAS" "Aliases for ease of use " OFF \
+        "VIMRC" "Fill .vimrc with settings" OFF \
+        "RPI_CLONE" "Install RPI-Clone" OFF \
+        3>&1 1>&2 2>&3)
+    dialog --clear
+    clear
+    printl "Output SubMenu1: $SMENU1"
+    MYMENU="$MYMENU $SMENU1"
+    echo "Output of variable: $SMENU1"
+}
+
+
+old_sub_menu2() {
     SMENU2=$(whiptail --checklist --notags --title "Select securing options" \
         "\nSelect items as required then hit OK " 25 75 16 \
         "CREATE_SYSADMIN" "Create alternative sysadmin account " OFF \
@@ -435,6 +488,24 @@ sub_menu2() {
         3>&1 1>&2 2>&3)
     printl "Output SubMenu2: $SMENU2"
     MYMENU="$MYMENU $SMENU2"
+}
+
+sub_menu2() {
+    SMENU2=$(dialog --title "Select securing options:" \
+    --checklist "\nSelect items as required then hit OK " 25 75 16 \
+        "CREATE_SYSADMIN" "Create alternative sysadmin account " OFF \
+        "UPDATE_HOST" "Apply latest updates available " OFF \
+        "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
+        "REGENERATE_SSH_KEYS" "Regenerate the SSH host keys " OFF \
+        "HOST_RENAME" "Rename the HOST " OFF \
+        "SSH_ALIVE_INTERVAL" "Enable SSH Alive interval" OFF \
+        "SSH_NO_PASSWORD" "Disable login with password on SSH" ON \
+        3>&1 1>&2 2>&3)
+    dialog --clear
+    clear
+    printl "Output SubMenu2: $SMENU2"
+    MYMENU="$MYMENU $SMENU2"
+    echo "Output of variable: $SMENU2"
 }
 
 ################################################################################
@@ -459,7 +530,8 @@ if [[ $MYMENU != *"QUIET"* ]]; then
 fi
 
 if [[ $MYMENU == "" ]]; then
-    whiptail --title "Installation Aborted" --msgbox "Cancelled as requested." 8 78
+    # whiptail --title "Installation Aborted" --msgbox "Cancelled as requested." 8 78
+    dialog  --title "Installation Aborted" --msgbox "Cancelled as requested." 8 78
     exit
 fi
 
@@ -599,7 +671,8 @@ moduleSshAliveInterval() {
 
     # Ask user input for value. Default 1800 seconds = 30 minutes.
     SSHALIVEINT=1800
-    SSHALIVEINT=$(whiptail --inputbox "\nProvide new value in seconds:\n" --title "SSH Client Alive Interval" 8 60 $SSHALIVEINT 3>&1 1>&2 2>&3)
+    # SSHALIVEINT=$(whiptail --inputbox "\nProvide new value in seconds:\n" --title "SSH Client Alive Interval" 8 60 $SSHALIVEINT 3>&1 1>&2 2>&3)
+    SSHALIVEINT=$(dialog --title "SSH Client Alive Interval" --inputbox "\nProvide new value in seconds:\n"  8 60 $SSHALIVEINT 3>&1 1>&2 2>&3)
 
     # First value
     PATTERN_IN="ClientAliveInterval"
@@ -721,19 +794,23 @@ moduleCreateSysadmin() {
     printstatus "Creating alternative administrative account..."
 
     ADMINNAME=sysadmin
-    ADMINNAME=$(whiptail --title "Administrative Account" --inputbox "\nEnter the name of the administrative account:\n" 8 60 $ADMINNAME 3>&1 1>&2 2>&3)
+    # ADMINNAME=$(whiptail --title "Administrative Account" --inputbox "\nEnter the name of the administrative account:\n" 8 60 $ADMINNAME 3>&1 1>&2 2>&3)
+    ADMINNAME=$(dialog --title "Administrative Account" --inputbox "\nEnter the name of the administrative account:\n" 8 60 $ADMINNAME 3>&1 1>&2 2>&3)
 
     if [ $USERID == $ADMINNAME ]; then
-        whiptail --title "Administrative Account" --infobox "You are already using the $ADMINNAME account." 8 78
+        # whiptail --title "Administrative Account" --infobox "You are already using the $ADMINNAME account." 8 78
+        dialog --title "Administrative Account" --infobox "You are already using the $ADMINNAME account." 8 78
     else
 
-        USERPASS=$(whiptail --passwordbox "Enter a user password" 8 60 3>&1 1>&2 2>&3)
+        #USERPASS=$(whiptail --passwordbox "Enter a user password" 8 60 3>&1 1>&2 2>&3)
+        USERPASS=$(dialog --passwordbox "Enter a user password" 8 60 3>&1 1>&2 2>&3)
         if [[ -z "${USERPASS// /}" ]]; then
             printf "No user password given - aborting${BIWhite}\r\n"
             exit
         fi
 
-        USERPASS2=$(whiptail --passwordbox "Confirm user password" 8 60 3>&1 1>&2 2>&3)
+        # USERPASS2=$(whiptail --passwordbox "Confirm user password" 8 60 3>&1 1>&2 2>&3)
+        USERPASS2=$(dialog --passwordbox "Confirm user password" 8 60 3>&1 1>&2 2>&3)
         if [ $USERPASS2 == "" ]; then
             printf "${BIRed}No password confirmation given - aborting${BIWhite}\r\n"
             exit
@@ -905,7 +982,8 @@ moduleHostRename() {
     OLDHOSTNAME="$(uname -n)"
     GENHOSTNAME=$OPSYS$RDM${MAC^^}
 
-    NEWHOSTNAME=$(whiptail --title "Rename Host" --inputbox "\nEnter the new name for the Host:\n" 8 60 $GENHOSTNAME 3>&1 1>&2 2>&3)
+    # NEWHOSTNAME=$(whiptail --title "Rename Host" --inputbox "\nEnter the new name for the Host:\n" 8 60 $GENHOSTNAME 3>&1 1>&2 2>&3)
+    NEWHOSTNAME=$(dialog --title "Rename Host" --inputbox "\nEnter the new name for the Host:\n" 8 60 $GENHOSTNAME 3>&1 1>&2 2>&3)
 
     printl "The old hostname: $OLDHOSTNAME"
     printl "The generated hostname: $GENHOSTNAME"
@@ -1276,7 +1354,8 @@ Log2RAMChangeCapacity() {
     ## Ask the user for input.
     L2RDEFVAL_I=40M
     printl "    - $MODULE_NAME: Default capacity is: $L2RDEFVAL_I"
-    L2RDEFVAL_O=$(whiptail --inputbox "\nProvide new capacity (for example 192M)):\n" --title "Log2RAM Capacity" 8 60 $L2RDEFVAL_I 3>&1 1>&2 2>&3)
+    # L2RDEFVAL_O=$(whiptail --inputbox "\nProvide new capacity (for example 192M)):\n" --title "Log2RAM Capacity" 8 60 $L2RDEFVAL_I 3>&1 1>&2 2>&3)
+    L2RDEFVAL_O=$(dialog --title "Log2RAM Capacity" --inputbox "\nProvide new capacity (for example 192M)):\n"  8 60 $L2RDEFVAL_I 3>&1 1>&2 2>&3)
     printl "    - $MODULE_NAME: Custom capacity is: $L2RDEFVAL_O"
 
     ## Check for SIZE value in the config file and make the modifications.
@@ -1606,18 +1685,21 @@ printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >>$LOGFIL
 # printl "Changed Hostname: $NEWHOSTNAME"
 
 if [[ $REBOOTREQUIRED == *"1"* ]]; then
-    if (whiptail --title "Script Finished" --yesno "Changes made require a REBOOT.\nOK?" 8 78); then
+    # if (whiptail --title "Script Finished" --yesno "Changes made require a REBOOT.\nOK?" 8 78); then
+    if (dialog --title "Script Finished" --yesno "Changes made require a REBOOT.\nOK?" 8 78); then
         printl "Script is Finished. Rebooting now."
         shutdown -r now
     else
-        whiptail --title "Script Finished" --msgbox "Changes made require a REBOOT.\nPlease reboot ASAP." 8 78
+        # whiptail --title "Script Finished" --msgbox "Changes made require a REBOOT.\nPlease reboot ASAP." 8 78
+        dialog --title "Script Finished" --msgbox "Changes made require a REBOOT.\nPlease reboot ASAP." 8 78
         echo ""
         printl "Script is Finished. Changes made require a reboot. Please REBOOT asap!"
         echo ""
     fi
 else
     echo ""
-    whiptail --title "Script Finished" --msgbox "ALL DONE\nNo reboot required. But will not harm by doing." 8 78
+    # whiptail --title "Script Finished" --msgbox "ALL DONE\nNo reboot required. But will not harm by doing." 8 78
+    dialog --title "Script Finished" --msgbox "ALL DONE\nNo reboot required. But will not harm by doing." 8 78
     printl "ALL DONE - No reboot required. But will not harm by doing."
     echo ""
 fi
