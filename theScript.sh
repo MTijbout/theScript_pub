@@ -2,8 +2,8 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 27/apr/19
-# Date last update: 2023-02-24
-# Author: Marco Tijbout
+# Date last update: 2023-02-27
+# Owner / Author: Marco Tijbout
 #
 # Version: 20230227-143003
 #
@@ -46,8 +46,8 @@
 #   Removal of VMware Pulse stuff
 # 0.9q Marco Tijbout:
 #   Updated CUSTOM_ALIAS
-#       - with new update command incl reboot notification
-#       - alias to run the script from online
+#   - with new update command incl reboot notification
+#   - alias to run the script from online
 # 0.9p Marco Tijbout:
 #   Updated how variables are cleared with unset
 #   Updated the aliases
@@ -168,13 +168,18 @@ fi
 ## Group Operating System types
 ## RedHat style
 if [[ $OPSYS == *"CENTOS"* ]]; then
-    OPSYS=REDHAT
+    OPSYSFAM=REDHAT
 else [[ $OPSYS == *"FEDORA"* ]]
-    OPSYS=REDHAT
+    OPSYSFAM=REDHAT
 fi
 
 ## Set apropriate update mechanisms for the OSses:
-if [[ $OPSYS == *"REDHAT"* ]]; then
+if [[ $OPSYS == *"CENTOS"* ]]; then
+    PCKMGR="yum"
+    PCK_INST="install -y"
+    AQUIET="--quiet"
+    NQUIET="-s"
+elif [[ $OPSYS == *"FEDORA"* ]]; then
     PCKMGR="yum"
     PCK_INST="install -y"
     AQUIET="--quiet"
@@ -210,7 +215,7 @@ REBOOTREQUIRED=0
 
 ## Color settings
 ## Default Colors
-DefCol='\e[0m'  # Default foreground and background colors
+ResetColor='\e[0m'  # Default foreground and background colors
 # '\e[0m' is equivalent to '\e[22;24;25;27;28;39;49m' (not bold, not underlined, not blinking, not inverse, not hidden, default foreground, default background)
 
 ## High Intensity
@@ -229,17 +234,6 @@ BIMagenta='\e[1;95m' # Purple
 BICyan='\e[1;96m'    # Cyan
 BIWhite='\e[1;97m'   # White
 
-## Determine CPU Architecture:
-CPUARCH=$(lscpu | grep Architecture | tr -d ":" | awk '{print $2}')
-printl "CPU Architecture: $CPUARCH"
-#i686 - 32-bit OS
-
-## Determine CPU Cores:
-ACTIVECORES=$(grep -c processor /proc/cpuinfo)
-printl "CPU Cores: $ACTIVECORES"
-
-## Determine current IP address:
-MY_IP=$(hostname -I)
 
 ################################################################################
 ## MAIN SECTION OF SCRIPT
@@ -259,6 +253,7 @@ printstatus() {
 
 printstatus "Welcome to THE SCRIPT!"
 
+## Determine Distribution information:
 DISTRO=$(/usr/bin/lsb_release -rs)
 CHECK64=$(uname -m)
 
@@ -270,16 +265,35 @@ printl "CHECK64: $CHECK64"
 printl "OPSYS: $OPSYS"
 printl ""
 
+## Determine CPU Architecture:
+CPUARCH=$(lscpu | grep Architecture | tr -d ":" | awk '{print $2}')
+printl "CPU Architecture: $CPUARCH"
+#i686 - 32-bit OS
+
+## Determine CPU Cores:
+ACTIVECORES=$(grep -c processor /proc/cpuinfo)
+printl "CPU Cores: $ACTIVECORES"
+
+## Determine current IP address:
+MY_IP=$(hostname -I)
+
 printstatus "Making sure THE SCRIPT works..."
 # In order the script to work, some packages need to be installed
 fnCheckRequiedPackages() {
     printl "- Check for required packages:"
     REQ_PACKAGES=(dialog ccze net-tools curl)
-    REQ_PACKAGES_RH=(dialog epel-release ccze net-tools curl) # Specific to RedHat style OS
+    REQ_PACKAGES_COS=(dialog epel-release ccze net-tools curl) # Specific to CentOS
+    REQ_PACKAGES_FED=(dialog ccze net-tools curl) # Specific to Fedora
 
-    if [[ $OPSYS == *"REDHAT"* ]]; then
+    if [[ $OPSYS == *"CENTOS"* ]]; then
         printl "  - OS ${OPSYS} family detected ..."
-        for i in "${REQ_PACKAGES_RH[@]}"; do
+        for i in "${REQ_PACKAGES_COS[@]}"; do
+            printl "  - Checking package ${i}"
+            rpm -qa | grep ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+        done
+    elif [[ $OPSYS == *"FEDORA"* ]]; then
+        printl "  - OS ${OPSYS} family detected ..."
+        for i in "${REQ_PACKAGES_FED[@]}"; do
             printl "  - Checking package ${i}"
             rpm -qa | grep ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
         done
@@ -302,7 +316,9 @@ fnCheckRequiedPackages
 # To get usefull system information intall lsb-releae
 install_lsb_release() {
     ## install lsb_release if not present.
-    if [[ $OPSYS == *"REDHAT"* ]]; then
+    if [[ $OPSYS == *"CENTOS"* ]]; then
+        LSB_PACKAGE="redhat-lsb-core"
+    elif [[ $OPSYS == *"FEDORA"* ]]; then
         LSB_PACKAGE="redhat-lsb-core"
     else
         LSB_PACKAGE="lsb-release"
@@ -343,7 +359,7 @@ fnMakeBackup() {
 
 # Function to check if a specific package is installed
 fnPackageCheck() {
-    [[ $OPSYS == *"REDHAT"* ]] && return
+    [[ $OPSYS == *"CENTOS"* ]] && return
     printl "  - Check if $1 is installed:"
     sudo dpkg -s $1 >/dev/null
     if [ $? -eq 0 ]; then
@@ -496,7 +512,7 @@ fi
 
 ## Module Functions
 fixipCheckOS() {
-    if [[ $OPSYS != *"REDHAT"* ]]; then
+    if [[ $OPSYS != *"CENTOS"* ]]; then
         printl "${BIRed}By the look of it, not one of the supported operating systems for this function.${BIWhite}\r\n"
         SUPPORTED_OS=false
     else
@@ -523,7 +539,7 @@ pruts01() {
         [[ $OPSYS != *"RASPBIAN"* ]] &&
         [[ $OPSYS != *"DEBIAN"* ]] &&
         [[ $OPSYS != *"UBUNTU"* ]] &&
-        [[ $OPSYS != *"REDHAT"* ]] &&
+        [[ $OPSYS != *"CENTOS"* ]] &&
         [[ $OPSYS != *"DIETPI"* ]]; then
         printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"
         exit
@@ -835,11 +851,14 @@ moduleCreateSysadmin() {
 moduleUpdateHost() {
     printstatus "Update the Host with the latest available updates..."
 
-    if [[ $OPSYS == *"REDHAT"* ]]; then
+    if [[ $OPSYS == *"CENTOS"* ]]; then
         $PCKMGR $AQUIET check-update 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET -y autoremove 2>&1 | tee -a $LOGFILE
-        #$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
+    elif [[ $OPSYS == *"FEDORA"* ]]; then
+        $PCKMGR $AQUIET check-update 2>&1 | tee -a $LOGFILE
+        $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
+        $PCKMGR $AQUIET -y autoremove 2>&1 | tee -a $LOGFILE
     elif [[ $OPSYS == *"ARCH"* ]]; then
         $PCKMGR -Syu 2>&1 | tee -a $LOGFILE
     elif [[ $OPSYS == *"OPENSUSE"* ]]; then
@@ -902,9 +921,9 @@ moduleShowIp() {
 
     TARGETFILE=/etc/issue
     if grep -Fq "IP Address" $TARGETFILE; then
-        printl "String found, $TARGETFILE does not need updating."
+        printl "  - String found, $TARGETFILE does not need updating."
     else
-        printl "String not found, settings will be added to $TARGETFILE"
+        printl "  - String not found, settings will be added to $TARGETFILE"
         ## Backup issue file.
         cat /etc/issue >>/etc/issue.bak 2>&1 | tee -a $LOGFILE
 
@@ -1003,10 +1022,10 @@ moduleCustomPrompt() {
     NEWPROMPT="export PS1='\${debian_chroot:+(\$debian_chroot)}\n\$OPSYS \$OPVER:\[\033[00;33m\] \u\[\033[01;34m\] at \[\033[00;33m\]\h\[\033[00m\] \[\033[01;34m\]in \[\033[00;33m\]\w\[\033[00m\]\n\\$ '"
 
     if grep -Fxq "## Custom prompt settings added ..." $TARGETFILE; then
-        printl "String found, $TARGETFILE does not need updating."
+        printl "  - String found, $TARGETFILE does not need updating."
         break
     else
-        printl "String not found, settings will be added to $TARGETFILE"
+        printl "  - String not found, settings will be added to $TARGETFILE"
         echo "" >>$TARGETFILE
         echo "## Custom prompt settings added ..." >>$TARGETFILE
         echo ". /etc/os-release" >>$TARGETFILE
@@ -1043,9 +1062,9 @@ cscript(){
 
 EOF
     if grep -Fxq "## Create script with header. Usage: cscript scriptname.sh" $TARGETFILE; then
-        printl "String found, $TARGETFILE does not need updating."
+        printl "  - String found, $TARGETFILE does not need updating."
     else
-        printl "String not found, settings will be added to $TARGETFILE"
+        printl "  - String not found, settings will be added to $TARGETFILE"
         echo "" >>$TARGETFILE
         cat "$WORKFILE3" >>$TARGETFILE
         rm $WORKFILE3
@@ -1146,10 +1165,10 @@ EOF
     fi
 
     if grep -Fxq "## Custom aliases added ..." $TARGETFILE; then
-        printl "String found, $TARGETFILE does not need updating."
+        printl "  - String found, $TARGETFILE does not need updating."
         return
     else
-        printl "String not found, settings will be added to $TARGETFILE"
+        printl "  - String not found, settings will be added to $TARGETFILE"
         echo "" >>$TARGETFILE
         echo "## Custom aliases added ..." >>$TARGETFILE
         echo "$NEWPROMPT" >>$TARGETFILE
@@ -1641,12 +1660,11 @@ done
 #$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
 
 printstatus "All done."
-printf "${BIGreen}== ${BIYELLOW}When complete, remove the script from the /home/$USERID directory.\r\n" >>$LOGFILE
-printf "${BIGreen}==\r\n" >>$LOGFILE
-printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >>$LOGFILE
-printl "${DefCol}"
-printl "Current IP: $MY_IP"
-printl "Changed Hostname: $NEWHOSTNAME"
+# printf "${BIGreen}== ${BIYELLOW}When complete, consider removing the script from the /home/$USERID directory.\r\n" >>$LOGFILE
+# printf "${BIGreen}==\r\n" >>$LOGFILE
+# printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >>$LOGFILE
+# printf "${ResetColor}" >>$LOGFILE
+echo -e "\nCurrent IP: $MY_IP"
 
 if [[ $REBOOTREQUIRED == *"1"* ]]; then
     # if (whiptail --title "Script Finished" --yesno "Changes made require a REBOOT.\nOK?" 8 78); then
