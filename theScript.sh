@@ -164,13 +164,17 @@ if [[ $OPSYS != *"ARCH"* ]] &&
     exit # Intentional exit of the schript here.
 fi
 
-## Check for OS that uses other update mechanisms.
+
+## Group Operating System types
+## RedHat style
 if [[ $OPSYS == *"CENTOS"* ]]; then
-    PCKMGR="yum"
-    PCK_INST="install -y"
-    AQUIET="--quiet"
-    NQUIET="-s"
-elif [[ $OPSYS == *"FEDORA"* ]]; then
+    OPSYS=REDHAT
+else [[ $OPSYS == *"FEDORA"* ]]
+    OPSYS=REDHAT
+fi
+
+## Set apropriate update mechanisms for the OSses:
+if [[ $OPSYS == *"REDHAT"* ]]; then
     PCKMGR="yum"
     PCK_INST="install -y"
     AQUIET="--quiet"
@@ -271,11 +275,11 @@ printstatus "Making sure THE SCRIPT works..."
 fnCheckRequiedPackages() {
     printl "- Check for required packages:"
     REQ_PACKAGES=(dialog ccze net-tools curl)
-    REQ_PACKAGES_COS=(dialog epel-release ccze net-tools curl) # Specific to CentOS
+    REQ_PACKAGES_RH=(dialog epel-release ccze net-tools curl) # Specific to RedHat style OS
 
-    if [[ $OPSYS == *"CENTOS"* ]]; then
-        printl "  - OS ${OPSYS} detected ..."
-        for i in "${REQ_PACKAGES_COS[@]}"; do
+    if [[ $OPSYS == *"REDHAT"* ]]; then
+        printl "  - OS ${OPSYS} family detected ..."
+        for i in "${REQ_PACKAGES_RH[@]}"; do
             printl "  - Checking package ${i}"
             rpm -qa | grep ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
         done
@@ -298,7 +302,7 @@ fnCheckRequiedPackages
 # To get usefull system information intall lsb-releae
 install_lsb_release() {
     ## install lsb_release if not present.
-    if [[ $OPSYS == *"CENTOS"* ]]; then
+    if [[ $OPSYS == *"REDHAT"* ]]; then
         LSB_PACKAGE="redhat-lsb-core"
     else
         LSB_PACKAGE="lsb-release"
@@ -339,7 +343,7 @@ fnMakeBackup() {
 
 # Function to check if a specific package is installed
 fnPackageCheck() {
-    [[ $OPSYS == *"CENTOS"* ]] && return
+    [[ $OPSYS == *"REDHAT"* ]] && return
     printl "  - Check if $1 is installed:"
     sudo dpkg -s $1 >/dev/null
     if [ $? -eq 0 ]; then
@@ -492,7 +496,7 @@ fi
 
 ## Module Functions
 fixipCheckOS() {
-    if [[ $OPSYS != *"CENTOS"* ]]; then
+    if [[ $OPSYS != *"REDHAT"* ]]; then
         printl "${BIRed}By the look of it, not one of the supported operating systems for this function.${BIWhite}\r\n"
         SUPPORTED_OS=false
     else
@@ -519,7 +523,7 @@ pruts01() {
         [[ $OPSYS != *"RASPBIAN"* ]] &&
         [[ $OPSYS != *"DEBIAN"* ]] &&
         [[ $OPSYS != *"UBUNTU"* ]] &&
-        [[ $OPSYS != *"CENTOS"* ]] &&
+        [[ $OPSYS != *"REDHAT"* ]] &&
         [[ $OPSYS != *"DIETPI"* ]]; then
         printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"
         exit
@@ -831,7 +835,7 @@ moduleCreateSysadmin() {
 moduleUpdateHost() {
     printstatus "Update the Host with the latest available updates..."
 
-    if [[ $OPSYS == *"CENTOS"* ]]; then
+    if [[ $OPSYS == *"REDHAT"* ]]; then
         $PCKMGR $AQUIET check-update 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
         $PCKMGR $AQUIET -y autoremove 2>&1 | tee -a $LOGFILE
