@@ -5,7 +5,7 @@
 # Date last update: 2023-02-24
 # Author: Marco Tijbout
 #
-# Version: 20230224-154643
+# Version: 20230227-143003
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -26,6 +26,8 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 20230227 Marco Tijbout:
+#   Updating support for Fedora
 # 20230224 Marco Tijbout:
 #   Enabled openSUSE updating
 #   Replaced whiptail by dialog
@@ -111,7 +113,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="9v"
-LAST_MODIFICATION="20230224-154643"
+LAST_MODIFICATION="20230227-143003"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -155,6 +157,7 @@ if [[ $OPSYS != *"ARCH"* ]] &&
     [[ $OPSYS != *"DEBIAN"* ]] &&
     [[ $OPSYS != *"UBUNTU"* ]] &&
     [[ $OPSYS != *"CENTOS"* ]] &&
+    [[ $OPSYS != *"FEDORA"* ]] &&
     [[ $OPSYS != *"OPENSUSE"* ]] &&
     [[ $OPSYS != *"DIETPI"* ]]; then
     printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"
@@ -163,6 +166,11 @@ fi
 
 ## Check for OS that uses other update mechanisms.
 if [[ $OPSYS == *"CENTOS"* ]]; then
+    PCKMGR="yum"
+    PCK_INST="install -y"
+    AQUIET="--quiet"
+    NQUIET="-s"
+elif [[ $OPSYS == *"FEDORA"* ]]; then
     PCKMGR="yum"
     PCK_INST="install -y"
     AQUIET="--quiet"
@@ -197,6 +205,10 @@ SECONDS=0
 REBOOTREQUIRED=0
 
 ## Color settings
+## Default Colors
+DefCol='\e[0m'  # Default foreground and background colors
+# '\e[0m' is equivalent to '\e[22;24;25;27;28;39;49m' (not bold, not underlined, not blinking, not inverse, not hidden, default foreground, default background)
+
 ## High Intensity
 IGreen='\e[0;92m'  # Green
 IYellow='\e[0;93m' # Yellow
@@ -1625,12 +1637,12 @@ done
 #$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
 
 printstatus "All done."
-# printf "${BIGreen}== ${BIYELLOW}When complete, remove the script from the /home/$USERID directory.\r\n" >>$LOGFILE
-# printf "${BIGreen}==\r\n" >>$LOGFILE
-# printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >>$LOGFILE
-# printl ""
-# printl "Current IP: $MY_IP"
-# printl "Changed Hostname: $NEWHOSTNAME"
+printf "${BIGreen}== ${BIYELLOW}When complete, remove the script from the /home/$USERID directory.\r\n" >>$LOGFILE
+printf "${BIGreen}==\r\n" >>$LOGFILE
+printf "${BIGreen}== ${BIPurple}Current IP: %s${BIWhite}\r\n" "$MY_IP" >>$LOGFILE
+printl "${DefCol}"
+printl "Current IP: $MY_IP"
+printl "Changed Hostname: $NEWHOSTNAME"
 
 if [[ $REBOOTREQUIRED == *"1"* ]]; then
     # if (whiptail --title "Script Finished" --yesno "Changes made require a REBOOT.\nOK?" 8 78); then
