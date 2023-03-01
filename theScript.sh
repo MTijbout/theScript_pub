@@ -125,8 +125,8 @@ DATETIME=$(date +%Y%m%d_%H%M%S)
 SCRIPT_NAME=$(basename "$0")
 ## Log file definition
 LOGFILE=${WORKDIR}/${SCRIPT_NAME}-${DATETIME}.log
-touch $LOGFILE
-chown $USERID:$USERID $LOGFILE
+touch "$LOGFILE"
+chown $USERID:$USERID "$LOGFILE"
 
 ## Logging and ECHO functionality combined.
 printl() {
@@ -183,7 +183,8 @@ elif [[ $OPSYS == *"FEDORA"* ]]; then
     PCKMGR="yum"
     PCK_INST="install -y"
     AQUIET="--quiet"
-    NQUIET="-s"
+    NQUIET="--verbose"
+    PCK_CLN="clean"
 elif [[ $OPSYS == *"PHOTON"* ]]; then
     PCKMGR="tdnf"
     PCK_INST="install -y"
@@ -283,31 +284,31 @@ fnCheckRequiedPackages() {
     printl "- Check for required packages:"
     REQ_PACKAGES=(dialog ccze net-tools curl)
     REQ_PACKAGES_COS=(dialog epel-release ccze net-tools curl) # Specific to CentOS
-    REQ_PACKAGES_FED=(dialog ccze net-tools curl) # Specific to Fedora
+    REQ_PACKAGES_FED=(dialog ccze net-tools curl dnf-utils vim) # Specific to Fedora
 
     if [[ $OPSYS == *"CENTOS"* ]]; then
         printl "  - OS ${OPSYS} family detected ..."
         for i in "${REQ_PACKAGES_COS[@]}"; do
             printl "  - Checking package ${i}"
-            rpm -qa | grep ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+            rpm -qa | grep ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
         done
     elif [[ $OPSYS == *"FEDORA"* ]]; then
         printl "  - OS ${OPSYS} family detected ..."
         for i in "${REQ_PACKAGES_FED[@]}"; do
             printl "  - Checking package ${i}"
-            rpm -qa | grep ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+            rpm -qa | grep ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
         done
     elif [[ $OPSYS == *"OPENSUSE"* ]]; then
         printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES[@]}"; do
             printl "  - Checking package ${i}"
-            rpm -qa | grep ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+            rpm -qa | grep ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
         done
     else
         printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES[@]}"; do
             printl "  - Checking package ${i}"
-            sudo dpkg -s ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+            sudo dpkg -s ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
         done
     fi
 }
@@ -323,8 +324,8 @@ install_lsb_release() {
     else
         LSB_PACKAGE="lsb-release"
     fi
-    # [ ! -x /usr/bin/lsb_release ] && $PCKMGR $AQUIET -y update > /dev/null 2>&1 && $PCKMGR $AQUIET $PCK_INST $LSB_PACKAGE 2>&1 | tee -a $LOGFILE
-    [ ! -x /usr/bin/lsb_release ] && $PCKMGR $AQUIET $PCK_INST $LSB_PACKAGE 2>&1 | tee -a $LOGFILE
+    # [ ! -x /usr/bin/lsb_release ] && "$PCKMGR" "$VERBOSITY" -y update > /dev/null 2>&1 && "$PCKMGR" "$VERBOSITY" $PCK_INST $LSB_PACKAGE 2>&1 | tee -a "$LOGFILE"
+    [ ! -x /usr/bin/lsb_release ] && "$PCKMGR" "$VERBOSITY" $PCK_INST $LSB_PACKAGE 2>&1 | tee -a "$LOGFILE"
 }
 install_lsb_release
 
@@ -368,7 +369,7 @@ fnPackageCheck() {
     else
         printl "    - Package $1 is not installed. Install."
         PKG_INSTALLED="false"
-        $PCKMGR $AQUIET $PCK_INST $1 2>&1 | tee -a $LOGFILE
+        "$PCKMGR" "$VERBOSITY" $PCK_INST $1 2>&1 | tee -a "$LOGFILE"
         ## Check and log success.
         if [ $? -eq 0 ]; then
             printl "    - Package $1 installed sucessfully."
@@ -489,9 +490,10 @@ if [[ $MYMENU == *"SEC_OPS"* ]]; then
     sub_menu2
 fi
 
-if [[ $MYMENU != *"QUIET"* ]]; then
-    AQUIET=""
-    NQUIET=""
+if [[ $MYMENU == *"QUIET"* ]]; then
+    VERBOSITY="$AQUIET"
+else
+    VERBOSITY="$NQUIET"
 fi
 
 if [[ $MYMENU == "" ]]; then
@@ -852,29 +854,41 @@ moduleUpdateHost() {
     printstatus "Update the Host with the latest available updates..."
 
     if [[ $OPSYS == *"CENTOS"* ]]; then
-        $PCKMGR $AQUIET check-update 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET -y autoremove 2>&1 | tee -a $LOGFILE
+        "$PCKMGR" "$VERBOSITY" check-update 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" update 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" -y autoremove 2>&1 | tee -a "$LOGFILE"
+        REBOOTREQUIRED=1
     elif [[ $OPSYS == *"FEDORA"* ]]; then
-        $PCKMGR $AQUIET check-update 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET -y autoremove 2>&1 | tee -a $LOGFILE
+        "$PCKMGR" "$VERBOSITY" check-update 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" update -y 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" autoremove -y 2>&1 | tee -a "$LOGFILE"
+        # "$PCKMGR" "$VERBOSITY" clean all -y 2>&1 | tee -a "$LOGFILE"
+        (needs-restarting -r) && REBOOTREQUIRED=0 || REBOOTREQUIRED=1
     elif [[ $OPSYS == *"ARCH"* ]]; then
-        $PCKMGR -Syu 2>&1 | tee -a $LOGFILE
+        $PCKMGR -Syu 2>&1 | tee -a "$LOGFILE"
+        REBOOTREQUIRED=1
     elif [[ $OPSYS == *"OPENSUSE"* ]]; then
-        $PCKMGR $AQUIET refresh 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET clean 2>&1 | tee -a $LOGFILE
+        "$PCKMGR" "$VERBOSITY" refresh 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" update 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" clean 2>&1 | tee -a "$LOGFILE"
+        REBOOTREQUIRED=1
     else
-        $PCKMGR $AQUIET update 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET list --upgradable 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET -y full-upgrade 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET -y dist-upgrade 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET -y autoremove 2>&1 | tee -a $LOGFILE
-        $PCKMGR $AQUIET -y autoclean 2>&1 | tee -a $LOGFILE
+        "$PCKMGR" "$VERBOSITY" update 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" list --upgradable 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" -y full-upgrade 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" -y dist-upgrade 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" -y autoremove 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" "$VERBOSITY" -y autoclean 2>&1 | tee -a "$LOGFILE"
+        [ -f /var/run/reboot-required ] && REBOOTREQUIRED=1 || REBOOTREQUIRED=0
     fi
-    ## Have the script reboot at the end.
-    REBOOTREQUIRED=1
+
+    # [ ${REBOOTREQUIRED} -eq 1 ] && echo "Do reboot" || echo "No reboot" 2>&1 | tee -a "$LOGFILE"
+
+    if [ ${REBOOTREQUIRED} == 1 ]; then
+        printl "  - After updating a reboot is required."
+    else
+        printl "  - After updating no reboot is required."
+    fi
 }
 
 ################################################################################
@@ -893,12 +907,12 @@ moduleRegenerateSshKeys() {
     logger Old SSH fingerprint is: $SSHFINGERPRINT ## Add to syslog
     printl Old SSH fingerprint is: $SSHFINGERPRINT
 
-    /bin/rm -v /etc/ssh/ssh_host_* 2>&1 | tee -a $LOGFILE
+    /bin/rm -v /etc/ssh/ssh_host_* 2>&1 | tee -a "$LOGFILE"
     ssh-keygen -t dsa -N "" -f /etc/ssh/ssh_host_dsa_key
     ssh-keygen -t rsa -N "" -f /etc/ssh/ssh_host_rsa_key
-    #dpkg-reconfigure openssh-server 2>&1 | tee -a $LOGFILE
+    #dpkg-reconfigure openssh-server 2>&1 | tee -a "$LOGFILE"
 
-    systemctl restart sshd 2>&1 | tee -a $LOGFILE
+    systemctl restart sshd 2>&1 | tee -a "$LOGFILE"
 
     ## Get the new public SSH key of the host.
     SSHFINGERPRINT=$(ssh-keygen -l -f /etc/ssh/ssh_host_ecdsa_key.pub | tr -d ":" | awk '{print $2}')
@@ -925,18 +939,18 @@ moduleShowIp() {
     else
         printl "  - String not found, settings will be added to $TARGETFILE"
         ## Backup issue file.
-        cat /etc/issue >>/etc/issue.bak 2>&1 | tee -a $LOGFILE
+        cat /etc/issue >>/etc/issue.bak 2>&1 | tee -a "$LOGFILE"
 
         ## Get content and add info to issue file.
-        cat $TARGETFILE >worker_file 2>&1 | tee -a $LOGFILE
-        echo 'IP Address: \4' >>worker_file 2>&1 | tee -a $LOGFILE
-        echo "" >>worker_file 2>&1 | tee -a $LOGFILE
+        cat $TARGETFILE >worker_file 2>&1 | tee -a "$LOGFILE"
+        echo 'IP Address: \4' >>worker_file 2>&1 | tee -a "$LOGFILE"
+        echo "" >>worker_file 2>&1 | tee -a "$LOGFILE"
 
         ## Replace the contend of the issue file.
-        cat worker_file >$TARGETFILE 2>&1 | tee -a $LOGFILE
+        cat worker_file >$TARGETFILE 2>&1 | tee -a "$LOGFILE"
 
         ## Remove the worker file.
-        rm worker_file 2>&1 | tee -a $LOGFILE
+        rm worker_file 2>&1 | tee -a "$LOGFILE"
 
         ## Cleanup variables
         unset TARGETFILE
@@ -1286,7 +1300,7 @@ Log2RAMgitPreReqs() {
     else
         printl "    - $MODULE_NAME: git is not installed. Install."
         GIT_INSTALLED="false"
-        $PCKMGR $AQUIET $PCK_INST git 2>&1 | tee -a $LOGFILE
+        "$PCKMGR" "$VERBOSITY" $PCK_INST git 2>&1 | tee -a "$LOGFILE"
         ## Check and log success.
         if [ $? -eq 0 ]; then
             printl "    - $MODULE_NAME: git installed sucessfully."
@@ -1305,7 +1319,7 @@ Log2RAMDownloadInstall() {
 
     ## Download Log2RAM
     cd $WORKDIR
-    git clone https://github.com/azlux/log2ram.git 2>&1 | tee -a $LOGFILE
+    git clone https://github.com/azlux/log2ram.git 2>&1 | tee -a "$LOGFILE"
     if [ $? -eq 0 ]; then
         printl "    - $MODULE_NAME: git clone sucessful."
         APP_DOWNLOAD_SUCCES="true"
@@ -1318,7 +1332,7 @@ Log2RAMDownloadInstall() {
     ## Install Log2RAM
     cd log2ram
     chmod +x install.sh
-    ./install.sh 2>&1 | tee -a $LOGFILE
+    ./install.sh 2>&1 | tee -a "$LOGFILE"
     if [ $? -eq 0 ]; then
         printl "    - $MODULE_NAME: Installation sucessful."
         APP_INSTALL_SUCCES="true"
@@ -1657,7 +1671,7 @@ done
 ## Some cleanup at the end...
 ################################################################################
 #rm -rf /var/cache/apt/archives/apt-fast
-#$PCKMGR $AQUIET -y clean 2>&1 | tee -a $LOGFILE
+#$PCKMGR $AQUIET -y clean 2>&1 | tee -a "$LOGFILE"
 
 printstatus "All done."
 # printf "${BIGreen}== ${BIYELLOW}When complete, consider removing the script from the /home/$USERID directory.\r\n" >>$LOGFILE
