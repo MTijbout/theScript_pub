@@ -5,7 +5,7 @@
 # Date last update: 2023-02-27
 # Owner / Author: Marco Tijbout
 #
-# Version: 20230227-143003
+# Version: 20230301-153141
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -26,6 +26,8 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 20230301 Marco Tijbout:
+#   Enhanced and fixed the Fedora updating process.
 # 20230227 Marco Tijbout:
 #   Updating support for Fedora
 # 20230224 Marco Tijbout:
@@ -112,8 +114,8 @@
 clear
 
 ## Version of theScript.sh
-SCRIPT_VERSION="9v"
-LAST_MODIFICATION="20230227-143003"
+SCRIPT_VERSION="9w"
+LAST_MODIFICATION="20230301-153141"
 
 ## The user that executed the script.
 USERID=$(logname)
