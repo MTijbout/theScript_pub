@@ -1,4 +1,8 @@
 #!/bin/bash
+
+## Set verbose output for all of the script. Debug purposes.
+# set -x
+
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 27/apr/19
@@ -205,8 +209,8 @@ elif [[ $OPSYS == *"OPENSUSE"* ]]; then
 else
     PCKMGR="apt-get"
     PCK_INST="install -y"
-    AQUIET="-qq"
-    NQUIET="-s"
+    AQUIET="-q"
+    NQUIET=""
 fi
 
 ## Get time as a UNIX timestamp (seconds elapsed since Jan 1, 1970 0:00 UTC)
@@ -292,25 +296,27 @@ fnCheckRequiedPackages() {
         printl "  - OS ${OPSYS} family detected ..."
         for i in "${REQ_PACKAGES_COS[@]}"; do
             printl "  - Checking package ${i}"
-            rpm -qa | grep ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
+            rpm -qa | grep "${i}" >/dev/null || "$PCKMGR" "$VERBOSITY" "$PCK_INST" "${i}" 2>&1 | tee -a "$LOGFILE"
         done
     elif [[ $OPSYS == *"FEDORA"* ]]; then
         printl "  - OS ${OPSYS} family detected ..."
         for i in "${REQ_PACKAGES_FED[@]}"; do
             printl "  - Checking package ${i}"
-            rpm -qa | grep ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
+            rpm -qa | grep "${i}" >/dev/null || "$PCKMGR" "$VERBOSITY" "$PCK_INST" "${i}" 2>&1 | tee -a "$LOGFILE"
         done
     elif [[ $OPSYS == *"OPENSUSE"* ]]; then
         printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES[@]}"; do
             printl "  - Checking package ${i}"
-            rpm -qa | grep ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
+            rpm -qa | grep "${i}" >/dev/null || "$PCKMGR" "$VERBOSITY" "$PCK_INST" "${i}" 2>&1 | tee -a "$LOGFILE"
         done
     else
         printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES[@]}"; do
             printl "  - Checking package ${i}"
-            sudo dpkg -s ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
+            # sudo dpkg -s "${i}" >/dev/null || "$PCKMGR" "$VERBOSITY" "$PCK_INST" "${i}" 2>&1 | tee -a "$LOGFILE"
+            # sudo dpkg -s ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
+            dpkg -s "${i}" >/dev/null || ${PCKMGR} ${PCK_INST} ${VERBOSITY} "${i}" 2>&1 | tee -a "$LOGFILE"
         done
     fi
 }
@@ -371,6 +377,7 @@ fnPackageCheck() {
     else
         printl "    - Package $1 is not installed. Install."
         PKG_INSTALLED="false"
+        echo "Shit here?"
         "$PCKMGR" "$VERBOSITY" $PCK_INST $1 2>&1 | tee -a "$LOGFILE"
         ## Check and log success.
         if [ $? -eq 0 ]; then
@@ -493,9 +500,9 @@ if [[ $MYMENU == *"SEC_OPS"* ]]; then
 fi
 
 if [[ $MYMENU == *"QUIET"* ]]; then
-    VERBOSITY="$AQUIET"
+    VERBOSITY=${AQUIET}
 else
-    VERBOSITY="$NQUIET"
+    VERBOSITY=${NQUIET}
 fi
 
 if [[ $MYMENU == "" ]]; then
