@@ -6,10 +6,10 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 27/apr/19
-# Date last update: 2023-02-27
+# Date last update: 20230307
 # Owner / Author: Marco Tijbout
 #
-# Version: 20230301-153141
+# Version: 20230307-173507
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -30,6 +30,10 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 20230307 Marco Tijbout:
+#   SSH_ALIVE_INTERVAL_DIS - Added option and functionality to disable SSH Client Alive Interval
+#   SSH_ALIVE_INTERVAL_EN - Renamed SSH_ALIVE_INTERVAL to accomodate enalbe/disable functionality
+#   SSHD related configs updated.
 # 20230301 Marco Tijbout:
 #   Enhanced and fixed the Fedora updating process.
 # 20230227 Marco Tijbout:
@@ -119,7 +123,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="9w"
-LAST_MODIFICATION="20230301-153141"
+LAST_MODIFICATION="20230307-173507"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -209,8 +213,8 @@ elif [[ $OPSYS == *"OPENSUSE"* ]]; then
 else
     PCKMGR="apt-get"
     PCK_INST="install -y"
-    AQUIET="-q"
-    NQUIET=""
+    AQUIET="-qq"
+    NQUIET="-s"
 fi
 
 ## Get time as a UNIX timestamp (seconds elapsed since Jan 1, 1970 0:00 UTC)
@@ -296,27 +300,25 @@ fnCheckRequiedPackages() {
         printl "  - OS ${OPSYS} family detected ..."
         for i in "${REQ_PACKAGES_COS[@]}"; do
             printl "  - Checking package ${i}"
-            rpm -qa | grep "${i}" >/dev/null || "$PCKMGR" "$VERBOSITY" "$PCK_INST" "${i}" 2>&1 | tee -a "$LOGFILE"
+            rpm -qa | grep ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
         done
     elif [[ $OPSYS == *"FEDORA"* ]]; then
         printl "  - OS ${OPSYS} family detected ..."
         for i in "${REQ_PACKAGES_FED[@]}"; do
             printl "  - Checking package ${i}"
-            rpm -qa | grep "${i}" >/dev/null || "$PCKMGR" "$VERBOSITY" "$PCK_INST" "${i}" 2>&1 | tee -a "$LOGFILE"
+            rpm -qa | grep ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
         done
     elif [[ $OPSYS == *"OPENSUSE"* ]]; then
         printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES[@]}"; do
             printl "  - Checking package ${i}"
-            rpm -qa | grep "${i}" >/dev/null || "$PCKMGR" "$VERBOSITY" "$PCK_INST" "${i}" 2>&1 | tee -a "$LOGFILE"
+            rpm -qa | grep ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
         done
     else
         printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES[@]}"; do
             printl "  - Checking package ${i}"
-            # sudo dpkg -s "${i}" >/dev/null || "$PCKMGR" "$VERBOSITY" "$PCK_INST" "${i}" 2>&1 | tee -a "$LOGFILE"
-            # sudo dpkg -s ${i} >/dev/null || $PCKMGR $AQUIET $PCK_INST ${i} 2>&1 | tee -a $LOGFILE
-            dpkg -s "${i}" >/dev/null || ${PCKMGR} ${PCK_INST} ${VERBOSITY} "${i}" 2>&1 | tee -a "$LOGFILE"
+            sudo dpkg -s ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
         done
     fi
 }
@@ -366,6 +368,14 @@ fnMakeBackup() {
     fnSucces $EXITCODE
 }
 
+# Function to make backups of files
+fnRestoreBackup() {
+    printl "  - Restore backup ${1}.bak-${DATETIME} to ${1}"
+    sudo cp "${1}".bak-${DATETIME} "${1}"
+    EXITCODE=$?
+    fnSucces $EXITCODE
+}
+
 # Function to check if a specific package is installed
 fnPackageCheck() {
     [[ $OPSYS == *"CENTOS"* ]] && return
@@ -377,7 +387,6 @@ fnPackageCheck() {
     else
         printl "    - Package $1 is not installed. Install."
         PKG_INSTALLED="false"
-        echo "Shit here?"
         "$PCKMGR" "$VERBOSITY" $PCK_INST $1 2>&1 | tee -a "$LOGFILE"
         ## Check and log success.
         if [ $? -eq 0 ]; then
@@ -414,10 +423,36 @@ fnDoReplaceLine() {
 fnYesNo() {
     # Show dialog that is answered with YES or NO. $1 is title and $2 is question to ask.
     FN_ANSWER=$(
-        dialog --title "${1}" --yesno --defaultno "${2}" 0 0 3>&1 1>&2 2>&3
+        dialog --defaultno --title "${1}" --yesno "${2}" 0 0 3>&1 1>&2 2>&3
         echo $?
     )
     # echo "Answer:  ${FN_ANSWER}"
+}
+
+fnCheckSSHDConf() {
+    ## Check SSHD configuration
+    printl "- Test configuration of /etc/ssh/sshd_conf"
+    sshd -T &> /dev/null
+    if [ $? -eq 0 ]; then
+        printl "  - sshd configuration file test passed."
+    else
+        printl "  - sshd configuration file test failed."
+
+        ## Restore backup of config file.
+        fnRestoreBackup  ${TARGETFILE}
+        return
+    fi
+}
+
+fnRestartSSHDService() {
+    ## Restart the sshd service.
+    printl "- Restart the sshd service ..."
+    systemctl restart sshd
+    if [ $? -eq 0 ]; then
+        printl "  - sshd service is restarted."
+    else
+        printl "  - Could not restart sshd service."
+    fi
 }
 
 ################################################################################
@@ -474,7 +509,8 @@ sub_menu2() {
         "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
         "REGENERATE_SSH_KEYS" "Regenerate the SSH host keys " OFF \
         "HOST_RENAME" "Rename the HOST " OFF \
-        "SSH_ALIVE_INTERVAL" "Enable SSH Alive interval" OFF \
+        "SSH_ALIVE_INTERVAL_EN" "Enable SSH Alive interval" OFF \
+        "SSH_ALIVE_INTERVAL_DIS" "Disable SSH Alive interval" OFF \
         "SSH_NO_PASSWORD" "Disable login with password on SSH" OFF \
         3>&1 1>&2 2>&3)
     dialog --clear
@@ -500,9 +536,9 @@ if [[ $MYMENU == *"SEC_OPS"* ]]; then
 fi
 
 if [[ $MYMENU == *"QUIET"* ]]; then
-    VERBOSITY=${AQUIET}
+    VERBOSITY="$AQUIET"
 else
-    VERBOSITY=${NQUIET}
+    VERBOSITY="$NQUIET"
 fi
 
 if [[ $MYMENU == "" ]]; then
@@ -535,27 +571,6 @@ fixipCheckOS() {
 #     # Dialog to ask for UUID generation
 #     # If yes, generate new UUID
 # }
-
-pruts01() {
-    if [ $? -eq 0 ]; then
-        printl "    - Pulse Agent: Successfully uninstalled the agent."
-        UNINSTALL_AGENT_SUCCES=true
-    else
-        printl "   - Pulse Agent: Agent NOT uninstalled succesfully"
-        UNINSTALL_AGENT_SUCCES=false
-    fi
-
-    if [[ $OPSYS != *"ARCH"* ]] &&
-        [[ $OPSYS != *"PHOTON"* ]] &&
-        [[ $OPSYS != *"RASPBIAN"* ]] &&
-        [[ $OPSYS != *"DEBIAN"* ]] &&
-        [[ $OPSYS != *"UBUNTU"* ]] &&
-        [[ $OPSYS != *"CENTOS"* ]] &&
-        [[ $OPSYS != *"DIETPI"* ]]; then
-        printl "${BIRed}By the look of it, not one of the supported operating systems - aborting${BIWhite}\r\n"
-        exit
-    fi
-}
 
 ## Module Logic
 moduleIPFix() {
@@ -618,13 +633,8 @@ moduleChangeLang() {
     fi
 
     ## Restart the sshd service.
-    printl "  - Restart the sshd service ..."
-    systemctl restart sshd
-    if [ $? -eq 0 ]; then
-        printl "    - sshd service is restarted."
-    else
-        printl "    - Could not restart sshd service."
-    fi
+    fnRestartSSHDService
+
     ## Have the script reboot at the end.
     REBOOTREQUIRED=1
 
@@ -635,11 +645,11 @@ moduleChangeLang() {
 }
 
 ################################################################################
-# SSH_ALIVE_INTERVAL - Enable alive interval on SSH
+# SSH_ALIVE_INTERVAL_EN - Enable alive interval on SSH
 ################################################################################
 
-moduleSshAliveInterval() {
-    printstatus "Enable SSH alive interval:"
+moduleEnableSshAliveInterval() {
+    printstatus "Enable SSH User Inactivity interval:"
     TARGETFILE="/etc/ssh/sshd_config"
 
     # Make backup first ...
@@ -647,7 +657,8 @@ moduleSshAliveInterval() {
 
     # Ask user input for value. Default 1800 seconds = 30 minutes.
     SSHALIVEINT=1800
-    SSHALIVEINT=$(dialog --title "SSH Client Alive Interval" --inputbox "\nProvide new value in seconds:\n"  8 60 $SSHALIVEINT 3>&1 1>&2 2>&3)
+    SSHALIVEINT=$(dialog --title "SSH User Inactivity Interval" --inputbox "\nProvide new value in seconds:\n"  8 60 $SSHALIVEINT 3>&1 1>&2 2>&3)
+    dialog --clear
 
     # First value
     PATTERN_IN="ClientAliveInterval"
@@ -659,16 +670,11 @@ moduleSshAliveInterval() {
     PATTERN_OUT="ClientAliveCountMax 0"
     fnDoReplaceLine # Call function to replace the line with the new values.
 
+    ## Check SSHD configuration
+    fnCheckSSHDConf
+
     ## Restart the sshd service.
-    printl "- Restart the sshd service ..."
-    systemctl restart sshd
-    if [ $? -eq 0 ]; then
-        printl "  - sshd service is restarted."
-    else
-        printl "  - Could not restart sshd service."
-    fi
-    ## Have the script reboot at the end.
-    # REBOOTREQUIRED=1
+    fnRestartSSHDService
 
     ## Cleanup variables
     unset SSHALIVEINT
@@ -679,7 +685,41 @@ moduleSshAliveInterval() {
 }
 
 ################################################################################
-# SSH_NO_PASSWORD - Enable alive interval on SSH
+# SSH_ALIVE_INTERVAL_DIS - Disable alive interval on SSH
+################################################################################
+
+moduleDisableSshAliveInterval() {
+    printstatus "Disable SSH User Inactivity interval:"
+    TARGETFILE="/etc/ssh/sshd_config"
+
+    ## Make backup first ...
+    fnMakeBackup ${TARGETFILE}
+
+    ## First value
+    PATTERN_IN="ClientAliveInterval"
+    PATTERN_OUT="#ClientAliveInterval 0"
+    fnDoReplaceLine # Call function to replace the line with the new values.
+
+    # Second value
+    PATTERN_IN="ClientAliveCountMax"
+    PATTERN_OUT="#ClientAliveCountMax 0"
+    fnDoReplaceLine # Call function to replace the line with the new values.
+
+    ## Check SSHD configuration
+    fnCheckSSHDConf
+
+    ## Restart the sshd service.
+    fnRestartSSHDService
+
+    ## Cleanup variables
+    unset TARGETFILE
+    unset EXITCODE
+    unset PATTERN_IN
+    unset PATTERN_OUT
+}
+
+################################################################################
+# SSH_NO_PASSWORD - Disable Password Authentication for SSH
 ################################################################################
 
 moduleSshNoPassword() {
@@ -698,32 +738,49 @@ moduleSshNoPassword() {
     fnMakeBackup ${TARGETFILE}
 
     # Ask user input to enable (=YES) or disable (=NO)
-    fnYesNo 'SSH Password authentication' 'SSH password authentication enabled?'
+    fnYesNo 'SSH Password authentication' '\nDo you want SSH password authentication enabled?\n\n'
 
-    if [ ${FN_ANSWER} -eq 0 ]; then
+    if [ "${FN_ANSWER}" -eq 0 ]; then
         printl "- Enable password authentication"
-        # sed -i 's|[#]*PasswordAuthentication no|PasswordAuthentication yes|g' /etc/ssh/sshd_config
         PATTERN_IN='[#]*PasswordAuthentication no'
         PATTERN_OUT='PasswordAuthentication yes'
         fnDoReplaceLine # Call function to replace the line with the new values.
+
+        ## Check for Cloud Init configuration
+        ## Maybe only valid for Ubuntu Systems?
+        CLOUDFILE="/etc/ssh/sshd_config.d/50-cloud-init.conf"
+        if [ -f "$CLOUDFILE" ]; then
+            PATTERN_IN='[#]*PasswordAuthentication no'
+            PATTERN_OUT='PasswordAuthentication yes'
+            TMP="$TARGETFILE"
+            TARGETFILE="$CLOUDFILE"
+            fnDoReplaceLine # Call function to replace the line with the new values.
+            TARGETFILE="$TMP"
+        fi
     else
         printl "- Disable password authentication"
-        # sed -i 's|[#]*PasswordAuthentication yes|PasswordAuthentication no|g' /etc/ssh/sshd_config
-        PATTERN_IN='[#]*PasswordAuthentication yes'
+        PATTERN_IN='PasswordAuthentication yes'
         PATTERN_OUT='PasswordAuthentication no'
         fnDoReplaceLine # Call function to replace the line with the new values.
+
+        ## Check for Cloud Init configuration
+        ## Maybe only valid for Ubuntu Systems?
+        CLOUDFILE="/etc/ssh/sshd_config.d/50-cloud-init.conf"
+        if [ -f "$CLOUDFILE" ]; then
+            PATTERN_OUT='PasswordAuthentication no'
+            PATTERN_IN='PasswordAuthentication'
+            TMP="$TARGETFILE"
+            TARGETFILE="$CLOUDFILE"
+            fnDoReplaceLine # Call function to replace the line with the new values.
+            TARGETFILE="$TMP"
+        fi
     fi
 
+    ## Check SSHD configuration
+    fnCheckSSHDConf
+
     ## Restart the sshd service.
-    printl "- Restart the sshd service ..."
-    systemctl restart sshd
-    if [ $? -eq 0 ]; then
-        printl "  - sshd service is restarted."
-    else
-        printl "  - Could not restart sshd service."
-    fi
-    ## Have the script reboot at the end.
-    # REBOOTREQUIRED=1
+    fnRestartSSHDService
 
     ## Cleanup variables
     unset FN_ANSWER
@@ -731,6 +788,8 @@ moduleSshNoPassword() {
     unset EXITCODE
     unset PATTERN_IN
     unset PATTERN_OUT
+    unset CLOUDFILE
+    unset TMP
 }
 
 ################################################################################
@@ -776,6 +835,7 @@ moduleCreateSysadmin() {
     ADMINNAME=sysadmin
     ADMINNAME=$(dialog --title "Administrative Account" --inputbox "\nEnter the name of the administrative account:\n" 8 60 ${ADMINNAME} 3>&1 1>&2 2>&3)
     printl "- The account name provided: ${ADMINNAME}"
+
 
     if [ "${USERID}" == "${ADMINNAME}" ]; then
         dialog --title "Administrative Account" --msgbox "\nYou are already using the ${ADMINNAME} account." 8 78
@@ -990,6 +1050,7 @@ moduleHostRename() {
 
     # NEWHOSTNAME=$(whiptail --title "Rename Host" --inputbox "\nEnter the new name for the Host:\n" 8 60 $GENHOSTNAME 3>&1 1>&2 2>&3)
     NEWHOSTNAME=$(dialog --title "Rename Host" --inputbox "\nEnter the new name for the Host:\n" 8 60 $GENHOSTNAME 3>&1 1>&2 2>&3)
+    dialog --clear
 
     printl "The old hostname: $OLDHOSTNAME"
     printl "The generated hostname: $GENHOSTNAME"
@@ -1360,8 +1421,8 @@ Log2RAMChangeCapacity() {
     ## Ask the user for input.
     L2RDEFVAL_I=40M
     printl "    - $MODULE_NAME: Default capacity is: $L2RDEFVAL_I"
-    # L2RDEFVAL_O=$(whiptail --inputbox "\nProvide new capacity (for example 192M)):\n" --title "Log2RAM Capacity" 8 60 $L2RDEFVAL_I 3>&1 1>&2 2>&3)
     L2RDEFVAL_O=$(dialog --title "Log2RAM Capacity" --inputbox "\nProvide new capacity (for example 192M)):\n"  8 60 $L2RDEFVAL_I 3>&1 1>&2 2>&3)
+    dialog --clear
     printl "    - $MODULE_NAME: Custom capacity is: $L2RDEFVAL_O"
 
     ## Check for SIZE value in the config file and make the modifications.
@@ -1667,7 +1728,8 @@ for ELEMENT in "${ARRAY[@]}"; do
     NO_PASS_SUDO) moduleNoPassSudo ;;
     REGENERATE_SSH_KEYS) moduleRegenerateSshKeys ;;
     HOST_RENAME) moduleHostRename ;;
-    SSH_ALIVE_INTERVAL) moduleSshAliveInterval ;;
+    SSH_ALIVE_INTERVAL_EN) moduleEnableSshAliveInterval ;;
+    SSH_ALIVE_INTERVAL_DIS) moduleDisableSshAliveInterval ;;
     SSH_NO_PASSWORD) moduleSshNoPassword ;;
 
     *)
@@ -1682,6 +1744,7 @@ done
 #rm -rf /var/cache/apt/archives/apt-fast
 #$PCKMGR $AQUIET -y clean 2>&1 | tee -a "$LOGFILE"
 
+clear
 printstatus "All done."
 # printf "${BIGreen}== ${BIYELLOW}When complete, consider removing the script from the /home/$USERID directory.\r\n" >>$LOGFILE
 # printf "${BIGreen}==\r\n" >>$LOGFILE
