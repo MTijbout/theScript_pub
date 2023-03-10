@@ -5,11 +5,11 @@
 
 ################################################################################
 # Filename: theScript.sh
-# Date Created: 27/apr/19
-# Date last update: 20230307
+# Date Created: 20190427
+# Date last update: 20230310
 # Owner / Author: Marco Tijbout
 #
-# Version: 20230307-173507
+# Version: 20230310-131628
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -123,7 +123,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="9w"
-LAST_MODIFICATION="20230307-173507"
+LAST_MODIFICATION="20230310-131628"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -318,7 +318,7 @@ fnCheckRequiedPackages() {
         printl "  - OS ${OPSYS} detected ..."
         for i in "${REQ_PACKAGES[@]}"; do
             printl "  - Checking package ${i}"
-            sudo dpkg -s ${i} >/dev/null || "$PCKMGR" "$VERBOSITY" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
+            sudo dpkg -s ${i} >/dev/null || "$PCKMGR" $PCK_INST ${i} 2>&1 | tee -a "$LOGFILE"
         done
     fi
 }
