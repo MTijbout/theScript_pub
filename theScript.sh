@@ -174,12 +174,12 @@ if [[ $OPSYS != *"ARCH"* ]] &&
     exit # Intentional exit of the schript here.
 fi
 
-
 ## Group Operating System types
 ## RedHat style
 if [[ $OPSYS == *"CENTOS"* ]]; then
     OPSYSFAM=REDHAT
-else [[ $OPSYS == *"FEDORA"* ]]
+else
+    [[ $OPSYS == *"FEDORA"* ]]
     OPSYSFAM=REDHAT
 fi
 
@@ -226,7 +226,7 @@ REBOOTREQUIRED=0
 
 ## Color settings
 ## Default Colors
-ResetColor='\e[0m'  # Default foreground and background colors
+ResetColor='\e[0m' # Default foreground and background colors
 # '\e[0m' is equivalent to '\e[22;24;25;27;28;39;49m' (not bold, not underlined, not blinking, not inverse, not hidden, default foreground, default background)
 
 ## High Intensity
@@ -244,7 +244,6 @@ BIPurple='\e[1;95m'  # Purple
 BIMagenta='\e[1;95m' # Purple
 BICyan='\e[1;96m'    # Cyan
 BIWhite='\e[1;97m'   # White
-
 
 ################################################################################
 ## MAIN SECTION OF SCRIPT
@@ -293,7 +292,7 @@ printstatus "Making sure THE SCRIPT works..."
 fnCheckRequiedPackages() {
     printl "- Check for required packages:"
     REQ_PACKAGES=(dialog ccze net-tools curl)
-    REQ_PACKAGES_COS=(dialog epel-release ccze net-tools curl) # Specific to CentOS
+    REQ_PACKAGES_COS=(dialog epel-release ccze net-tools curl)  # Specific to CentOS
     REQ_PACKAGES_FED=(dialog ccze net-tools curl dnf-utils vim) # Specific to Fedora
 
     if [[ $OPSYS == *"CENTOS"* ]]; then
@@ -432,14 +431,14 @@ fnYesNo() {
 fnCheckSSHDConf() {
     ## Check SSHD configuration
     printl "- Test configuration of /etc/ssh/sshd_conf"
-    sshd -T &> /dev/null
+    sshd -T &>/dev/null
     if [ $? -eq 0 ]; then
         printl "  - sshd configuration file test passed."
     else
         printl "  - sshd configuration file test failed."
 
         ## Restore backup of config file.
-        fnRestoreBackup  ${TARGETFILE}
+        fnRestoreBackup ${TARGETFILE}
         return
     fi
 }
@@ -503,7 +502,7 @@ sub_menu1() {
 
 sub_menu2() {
     SMENU2=$(dialog --title "Select securing options:" \
-    --checklist "\nSelect items as required then hit OK " 25 75 16 \
+        --checklist "\nSelect items as required then hit OK " 25 75 16 \
         "CREATE_SYSADMIN" "Create alternative sysadmin account " OFF \
         "UPDATE_HOST" "Apply latest updates available " OFF \
         "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
@@ -542,7 +541,7 @@ else
 fi
 
 if [[ $MYMENU == "" ]]; then
-    dialog  --title "Installation Aborted" --msgbox "Cancelled as requested." 8 78
+    dialog --title "Installation Aborted" --msgbox "Cancelled as requested." 8 78
     printl "Cancelled as requested."
     exit
 fi
@@ -657,7 +656,7 @@ moduleEnableSshAliveInterval() {
 
     # Ask user input for value. Default 1800 seconds = 30 minutes.
     SSHALIVEINT=1800
-    SSHALIVEINT=$(dialog --title "SSH User Inactivity Interval" --inputbox "\nProvide new value in seconds:\n"  8 60 $SSHALIVEINT 3>&1 1>&2 2>&3)
+    SSHALIVEINT=$(dialog --title "SSH User Inactivity Interval" --inputbox "\nProvide new value in seconds:\n" 8 60 $SSHALIVEINT 3>&1 1>&2 2>&3)
     dialog --clear
 
     # First value
@@ -836,7 +835,6 @@ moduleCreateSysadmin() {
     ADMINNAME=$(dialog --title "Administrative Account" --inputbox "\nEnter the name of the administrative account:\n" 8 60 ${ADMINNAME} 3>&1 1>&2 2>&3)
     printl "- The account name provided: ${ADMINNAME}"
 
-
     if [ "${USERID}" == "${ADMINNAME}" ]; then
         dialog --title "Administrative Account" --msgbox "\nYou are already using the ${ADMINNAME} account." 8 78
         dialog --clear
@@ -875,8 +873,8 @@ moduleCreateSysadmin() {
         for gr in $SRC_GROUPS; do
             if [ $i -gt 2 ]; then
                 if [ -z "$NEW_GROUPS" ]; then NEW_GROUPS=$gr; else NEW_GROUPS="$NEW_GROUPS,$gr"; fi
-                    EXITCODE=$?
-                    fnSucces $EXITCODE
+                EXITCODE=$?
+                fnSucces $EXITCODE
             fi
             ((i++))
         done
@@ -1421,7 +1419,7 @@ Log2RAMChangeCapacity() {
     ## Ask the user for input.
     L2RDEFVAL_I=40M
     printl "    - $MODULE_NAME: Default capacity is: $L2RDEFVAL_I"
-    L2RDEFVAL_O=$(dialog --title "Log2RAM Capacity" --inputbox "\nProvide new capacity (for example 192M)):\n"  8 60 $L2RDEFVAL_I 3>&1 1>&2 2>&3)
+    L2RDEFVAL_O=$(dialog --title "Log2RAM Capacity" --inputbox "\nProvide new capacity (for example 192M)):\n" 8 60 $L2RDEFVAL_I 3>&1 1>&2 2>&3)
     dialog --clear
     printl "    - $MODULE_NAME: Custom capacity is: $L2RDEFVAL_O"
 
@@ -1755,7 +1753,7 @@ echo -e "\nCurrent IP: $MY_IP"
 if [[ $REBOOTREQUIRED == *"1"* ]]; then
     # if (whiptail --title "Script Finished" --yesno "Changes made require a REBOOT.\nOK?" 8 78); then
     if (dialog --title "Script Finished" --yesno "Changes made require a REBOOT.\nOK?" 8 78); then
-        dialog --clear 
+        dialog --clear
         printl "Script is Finished. Rebooting now."
         shutdown -r now
     else
