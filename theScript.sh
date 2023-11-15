@@ -6,10 +6,10 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 20190427
-# Date last update: 20230310
+# Date last update: 20231115
 # Owner / Author: Marco Tijbout
 #
-# Version: 20230310-131628
+# Version: 20231115-220653
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -30,6 +30,10 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 20230310 Marco Tijbout:
+#   Adding some additional SSH settings
+# 20230310 Marco Tijbout:
+#   Working on challenges with the difference of APT and APT-GET under Ubuntu. TBC.
 # 20230307 Marco Tijbout:
 #   SSH_ALIVE_INTERVAL_DIS - Added option and functionality to disable SSH Client Alive Interval
 #   SSH_ALIVE_INTERVAL_EN - Renamed SSH_ALIVE_INTERVAL to accomodate enalbe/disable functionality
@@ -122,8 +126,8 @@
 clear
 
 ## Version of theScript.sh
-SCRIPT_VERSION="9w"
-LAST_MODIFICATION="20230310-131628"
+SCRIPT_VERSION="9x"
+LAST_MODIFICATION="20231115-220653"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -211,10 +215,10 @@ elif [[ $OPSYS == *"OPENSUSE"* ]]; then
     AQUIET="--quiet"
     NQUIET="--verbose"
 else
-    PCKMGR="apt-get"
+    PCKMGR="apt"
     PCK_INST="install -y"
-    AQUIET="-qq"
-    NQUIET="-s"
+    AQUIET="-q"
+    NQUIET="-v"
 fi
 
 ## Get time as a UNIX timestamp (seconds elapsed since Jan 1, 1970 0:00 UTC)
@@ -504,12 +508,13 @@ sub_menu2() {
     SMENU2=$(dialog --title "Select securing options:" \
         --checklist "\nSelect items as required then hit OK " 25 75 16 \
         "CREATE_SYSADMIN" "Create alternative sysadmin account " OFF \
-        "UPDATE_HOST" "Apply latest updates available " OFF \
+        "UPDATE_HOST" "Apply latest updates available " ON \
         "NO_PASS_SUDO" "Remove sudo password requirement (NOT SECURE!) " OFF \
         "REGENERATE_SSH_KEYS" "Regenerate the SSH host keys " OFF \
         "HOST_RENAME" "Rename the HOST " OFF \
-        "SSH_ALIVE_INTERVAL_EN" "Enable SSH Alive interval" OFF \
-        "SSH_ALIVE_INTERVAL_DIS" "Disable SSH Alive interval" OFF \
+        "SSH_BEST_PRACTICES" "Apply SSH best practices " OFF \
+        "SSH_ALIVE_INTERVAL_EN" "Enable SSH Alive interval " OFF \
+        "SSH_ALIVE_INTERVAL_DIS" "Disable SSH Alive interval " OFF \
         "SSH_NO_PASSWORD" "Disable login with password on SSH" OFF \
         3>&1 1>&2 2>&3)
     dialog --clear
@@ -535,9 +540,9 @@ if [[ $MYMENU == *"SEC_OPS"* ]]; then
 fi
 
 if [[ $MYMENU == *"QUIET"* ]]; then
-    VERBOSITY="$AQUIET"
+    VERBOSITY=${AQUIET}
 else
-    VERBOSITY="$NQUIET"
+    VERBOSITY=${NQUIET}
 fi
 
 if [[ $MYMENU == "" ]]; then
@@ -703,6 +708,38 @@ moduleDisableSshAliveInterval() {
     PATTERN_IN="ClientAliveCountMax"
     PATTERN_OUT="#ClientAliveCountMax 0"
     fnDoReplaceLine # Call function to replace the line with the new values.
+
+    ## Check SSHD configuration
+    fnCheckSSHDConf
+
+    ## Restart the sshd service.
+    fnRestartSSHDService
+
+    ## Cleanup variables
+    unset TARGETFILE
+    unset EXITCODE
+    unset PATTERN_IN
+    unset PATTERN_OUT
+}
+
+################################################################################
+# SSH_BEST_PRACTICES - Apply SSH best practices
+################################################################################
+
+moduleSshBestPractices() {
+    printstatus "Apply SSH best practices:"
+    TARGETFILE="/etc/ssh/sshd_config"
+
+    ## Make backup first ...
+    fnMakeBackup ${TARGETFILE}
+
+    ## Disable Empty Passwords
+    PATTERN_IN="#PermitEmptyPasswords no"
+    PATTERN_OUT="PermitEmptyPasswords no"
+    fnDoReplaceLine # Call function to replace the line with the new values.
+
+    # Call the module to enable SSH Alive Interval
+    moduleEnableSshAliveInterval
 
     ## Check SSHD configuration
     fnCheckSSHDConf
@@ -911,7 +948,7 @@ moduleCreateSysadmin() {
 }
 
 ################################################################################
-# Updating the Host.
+# Updating the Host. UPDATE_HOST
 ################################################################################
 
 ## Module Functions
@@ -940,16 +977,14 @@ moduleUpdateHost() {
         "$PCKMGR" "$VERBOSITY" clean 2>&1 | tee -a "$LOGFILE"
         REBOOTREQUIRED=1
     else
-        "$PCKMGR" "$VERBOSITY" update 2>&1 | tee -a "$LOGFILE"
-        "$PCKMGR" "$VERBOSITY" list --upgradable 2>&1 | tee -a "$LOGFILE"
-        "$PCKMGR" "$VERBOSITY" -y full-upgrade 2>&1 | tee -a "$LOGFILE"
-        "$PCKMGR" "$VERBOSITY" -y dist-upgrade 2>&1 | tee -a "$LOGFILE"
-        "$PCKMGR" "$VERBOSITY" -y autoremove 2>&1 | tee -a "$LOGFILE"
-        "$PCKMGR" "$VERBOSITY" -y autoclean 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" update 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" list --upgradable 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" -y full-upgrade 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" -y dist-upgrade 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" -y autoremove 2>&1 | tee -a "$LOGFILE"
+        "$PCKMGR" -y autoclean 2>&1 | tee -a "$LOGFILE"
         [ -f /var/run/reboot-required ] && REBOOTREQUIRED=1 || REBOOTREQUIRED=0
     fi
-
-    # [ ${REBOOTREQUIRED} -eq 1 ] && echo "Do reboot" || echo "No reboot" 2>&1 | tee -a "$LOGFILE"
 
     if [ ${REBOOTREQUIRED} == 1 ]; then
         printl "  - After updating a reboot is required."
@@ -1139,7 +1174,7 @@ cscript(){
     touch "\$@";
     chmod +x "\$@";
     echo '#!/usr/bin/env bash' > "\$@";
-    nano "\$@";
+    vi "\$@";
 }
 
 EOF
@@ -1729,6 +1764,7 @@ for ELEMENT in "${ARRAY[@]}"; do
     SSH_ALIVE_INTERVAL_EN) moduleEnableSshAliveInterval ;;
     SSH_ALIVE_INTERVAL_DIS) moduleDisableSshAliveInterval ;;
     SSH_NO_PASSWORD) moduleSshNoPassword ;;
+    SSH_BEST_PRACTICES) moduleSshBestPractices ;;
 
     *)
         printl "Not sure what happened here. Do not know what to do with: ${ELEMENT}"
