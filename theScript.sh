@@ -1753,7 +1753,7 @@ fnSetTimezone() {
 CONVERSION=$(sed 's/"//g' <<<"${MYMENU}")
 
 # Convert the string into an array:
-ARRAY=($"CONVERSION")
+ARRAY=($CONVERSION)
 
 # Evaluate all elements in the array:
 for ELEMENT in "${ARRAY[@]}"; do
