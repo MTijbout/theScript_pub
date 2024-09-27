@@ -6,10 +6,10 @@
 ################################################################################
 # Filename: theScript.sh
 # Date Created: 20190427
-# Date last update: 20231115
+# Date last update: 20240927
 # Owner / Author: Marco Tijbout
 #
-# Version: 20231115-220653
+# Version: 20240927-1159
 #
 #            _   _          ____            _       _         _
 #           | |_| |__   ___/ ___|  ___ _ __(_)_ __ | |_   ___| |__
@@ -30,6 +30,8 @@
 #   -Using arguments for pre-selection of menu items and unattended run.
 #
 # Version history:
+# 20240927 Marco Tijbout:
+#   Updated the update alias with additional commands.
 # 20230310 Marco Tijbout:
 #   Adding some additional SSH settings
 # 20230310 Marco Tijbout:
@@ -127,7 +129,7 @@ clear
 
 ## Version of theScript.sh
 SCRIPT_VERSION="9x"
-LAST_MODIFICATION="20231115-220653"
+LAST_MODIFICATION="20240927-1159"
 
 ## The user that executed the script.
 USERID=$(logname)
@@ -1260,6 +1262,7 @@ moduleLocalMirror() {
 ## Module Functions
 
 ## Module Logic
+# shellcheck disable=SC2120
 moduleCustomAlias() {
     printstatus "Add some aliases for ease of use..."
 
@@ -1313,10 +1316,31 @@ alias nocomment="grep -Ev '^(#|$)'"
 alias catnc="grep -Ev '^(#|$)'"
 alias monit='sudo tail -f /var/log/daemon.log'
 alias div='echo -e "\n=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n"'
-alias update='sudo apt update && div && sudo apt list --upgradable && div && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt autoclean -y && div && [ -f /var/run/reboot-required ] && echo -e "- Reboot is required ..." || echo -e "- No reboot required ..."'
-alias fix127='sudo mv /var/lib/dpkg/info/install-info.postinst /var/lib/dpkg/info/install-info.postinst.bad'
+alias update='sudo apt update && div && sudo apt list --upgradable && div && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt autoclean -y && curl https://rclone.org/install.sh | sudo bash && div && [ -f /var/run/reboot-required ] && echo -e "- Reboot is required ..." || echo -e "- No reboot required ..."'alias fix127='sudo mv /var/lib/dpkg/info/install-info.postinst /var/lib/dpkg/info/install-info.postinst.bad'
 alias thescript='curl -s https://raw.githubusercontent.com/MTijbout/theScript_pub/master/theScript.sh | sudo bash'
+
+## Create script with header. Usage: cscript scriptname.sh
+cscript(){
+    touch "$@";
+    chmod +x "$@";
+    echo '#!/usr/bin/env bash' > "$@";
+    nano "$@";
+}
+
+
+## Command to make backup of (config) files
+bucff(){
+    echo -e "Backing up file: $@";
+    sudo cp -v "$@"{,.bak-$(date +%Y%m%d_%H%M%S)};
+}
+
+findfile()
+{
+        #find . -iname "*$1*"
+        sudo find . -iname "*$1*" 2>&1 | grep -v "Operation not permitted"
+}
 EOF
+
     fi
     chown ${USERID}:${USERID} $TARGETFILE
     ## Cleanup variables
@@ -1729,7 +1753,7 @@ fnSetTimezone() {
 CONVERSION=$(sed 's/"//g' <<<"${MYMENU}")
 
 # Convert the string into an array:
-ARRAY=($CONVERSION)
+ARRAY=($"CONVERSION")
 
 # Evaluate all elements in the array:
 for ELEMENT in "${ARRAY[@]}"; do
@@ -1809,4 +1833,3 @@ fi
 #     printl "ALL DONE - No reboot required. But will not harm by doing."
 #     echo ""
 # fi
-099o
